@@ -1,0 +1,97 @@
+import inspect
+import json
+import os
+import random
+import pandas as pd
+from clint.textui import progress
+
+
+class Data():
+    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False):
+        self._filename = filename
+        self._test_subset = test_subset
+        self._data = None
+        self._data_train = None
+        self._data_test = None
+        self._train_size = train_size
+        self._train_seed = train_seed
+        self._only_train = only_train
+
+        self.VERSION = 1
+
+        if not os.path.exists(filename):
+            if os.path.exists(filename[:-3] + ".csv"):
+                pd.read_csv(filename[:-3] + ".csv").to_pickle(filename)
+            else:
+                raise FileNotFoundError("Data file '{}' not found".format(filename))
+
+    def __str__(self):
+        s = "Data.{}: {}".format(self.VERSION, self._filename)
+        (args, _, _, defaults) = inspect.getargspec(self.__init__)
+        s += "".join([", {}:{}".format(a, getattr(self, "_" + a)) for a, d in zip(args[-len(defaults):], defaults) if getattr(self, "_" + a) != d])
+        return s
+
+    def get_dataframe_all(self):
+        self._load_file()
+        return self._data
+
+    def get_dataframe_train(self):
+        self._load_file()
+        return self._data_train
+
+    def get_dataframe_test(self):
+        self._load_file()
+        return self._data_test
+
+    def _load_file(self):
+        if self._data is not None:
+            return
+
+        self._data = pd.read_pickle(self._filename)
+
+        if self._test_subset:
+            self._data = self._data[:self._test_subset]
+
+        if self._train_size is not None:
+            if self._train_seed:
+                random.seed(self._train_seed)
+                students = self.get_students()
+                selected_students = random.sample(students, int(len(students) * self._train_size))
+            else:
+                selected_students = json.load(open(os.path.join(os.path.dirname(self._filename), "/train_students.json")))
+            self._data_train = self._data[self._data["student"].isin(selected_students)]
+            self._data_test = self._data[~self._data["student"].isin(selected_students)]
+
+        if self._only_train:
+            self._data = self._data_train
+            self._data_test = pd.DataFrame(columns=self._data.columns)
+
+    def join_predictions(self, predictions):
+        self._load_file()
+        if "prediction" in self._data.columns:
+            del self._data["prediction"]
+        self._data = self._data.join(pd.Series(predictions, name="prediction"), on="id")
+
+    def get_items(self):
+        self._load_file()
+        return list(self._data["item"].unique())
+
+    def get_students(self):
+        self._load_file()
+        return list(self._data["student"].unique())
+
+    def iter(self, data=None):
+        self._load_file()
+        if data is None:
+            data = self._data
+        columns = data.columns.values
+        for row in progress.bar(data.values, every=max(1, len(data) / 10000)):
+            yield dict(zip(columns, row))
+
+    def iter_train(self):
+        self._load_file()
+        return self.iter(self._data_train)
+
+    def iter_test(self):
+        self._load_file()
+        return self.iter(self._data_test)
