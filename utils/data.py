@@ -4,6 +4,10 @@ import os
 import random
 import pandas as pd
 from clint.textui import progress
+import sys
+import csv
+
+csv.field_size_limit(sys.maxsize)
 
 
 class Data():
@@ -21,7 +25,7 @@ class Data():
 
         if not os.path.exists(filename):
             if os.path.exists(filename[:-3] + ".csv"):
-                pd.read_csv(filename[:-3] + ".csv").to_pickle(filename)
+                pd.read_csv(filename[:-3] + ".csv", engine="python").to_pickle(filename)
             else:
                 raise FileNotFoundError("Data file '{}' not found".format(filename))
 
@@ -48,6 +52,9 @@ class Data():
             return
 
         self._data = pd.read_pickle(self._filename)
+        for req in ["item", "student", "correct", "response_time"]:
+            if req not in self._data.columns:
+                raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
 
         if self._test_subset:
             self._data = self._data[:self._test_subset]
@@ -68,9 +75,9 @@ class Data():
 
     def join_predictions(self, predictions):
         self._load_file()
-        if "prediction" in self._data.columns:
-            del self._data["prediction"]
-        self._data = self._data.join(pd.Series(predictions, name="prediction"), on="id")
+        if "prediction" in self._data_train.columns:
+            del self._data_train["prediction"]
+        self._data_train = self._data_train.join(pd.Series(predictions, name="prediction"), on="id")
 
     def get_items(self):
         self._load_file()
@@ -85,7 +92,7 @@ class Data():
         if data is None:
             data = self._data
         columns = data.columns.values
-        for row in progress.bar(data.values, every=max(1, len(data) / 10000)):
+        for row in progress.bar(data.values, every=1000):
             yield dict(zip(columns, row))
 
     def iter_train(self):
@@ -95,3 +102,12 @@ class Data():
     def iter_test(self):
         self._load_file()
         return self.iter(self._data_test)
+
+    def train_size(self):
+        return len(self.get_dataframe_train())
+
+    def test_size(self):
+        return len(self.get_dataframe_test())
+
+    def size(self):
+        return len(self.get_dataframe_all())
