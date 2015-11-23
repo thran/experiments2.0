@@ -75,9 +75,9 @@ class Data():
 
     def join_predictions(self, predictions):
         self._load_file()
-        if "prediction" in self._data_train.columns:
-            del self._data_train["prediction"]
-        self._data_train = self._data_train.join(pd.Series(predictions, name="prediction"), on="id")
+        if "prediction" in self._data_test.columns:
+            del self._data_test["prediction"]
+        self._data_test = self._data_test.join(pd.Series(predictions, name="prediction"), on="id")
 
     def get_items(self):
         self._load_file()

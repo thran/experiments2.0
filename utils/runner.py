@@ -13,7 +13,7 @@ class Runner():
     def __init__(self, data, model):
         self._data = data
         self._model = model
-        self._log = pd.Series(index=self._data.get_dataframe_test().index)
+        self._log = {}
         self._hash = get_hash(self._model, self._data)
 
     def _pandas_logger(self, answer, prediction):
@@ -26,7 +26,7 @@ class Runner():
     def run(self, force=False):
         if not force and (os.path.exists(self.get_log_filename()) and os.path.exists(self.get_report_filename())):
             print("Report and log in cache - {} ".format(self._hash))
-            return
+            return self._hash
 
         start = datetime.datetime.now()
         print("Pre-processing data...")
@@ -48,9 +48,10 @@ class Runner():
             "dataset size": len(self._data.get_dataframe_all()),
         }
         json.dump(report, open(self.get_report_filename(), "w"), indent=4)
-        self._log.to_pickle(self.get_log_filename())
+        pd.Series(self._log, index=self._log.keys()).to_pickle(self.get_log_filename())
 
         print("Report and log written to cache - {} ".format(self._hash))
+        return self._hash
 
     def get_log_filename(self):
         return os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cache", "{}.log.pd".format(self._hash))

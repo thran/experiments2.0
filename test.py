@@ -1,7 +1,7 @@
-from utils import data, runner
-from models.model import AvgModel
+from utils import data, evaluator
+from models.model import AvgModel, ItemAvgModel
 
 data = data.Data("data/matmat/2015-11-20/answers.pd", train_size=0.3)
-model = AvgModel()
+model = ItemAvgModel()
 
-runner.Runner(data, model).run()
+print(evaluator.Evaluator(data, model))
