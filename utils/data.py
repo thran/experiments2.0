@@ -69,6 +69,9 @@ class Data():
                 selected_students = json.load(open(os.path.join(os.path.dirname(self._filename), "/train_students.json")))
             self._data_train = self._data[self._data["student"].isin(selected_students)]
             self._data_test = self._data[~self._data["student"].isin(selected_students)]
+        else:
+            self._data_test  = self._data
+            self._data_train = pd.DataFrame(columns=self._data.columns)
 
         if self._only_train:
             self._data = self._data_train
