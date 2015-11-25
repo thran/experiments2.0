@@ -6,10 +6,14 @@ import pandas as pd
 
 class Model:
     def __init__(self):
-        self.VERSION = 0
-        self.name = "Model"
+            self.VERSION = 0
+            self.name = "Model"
 
     def __str__(self):
+        if self.name == "Model":
+            raise AttributeError("Model name not specified")
+        if self.VERSION == 0:
+            raise AttributeError("Model version not specified")
         s = "{}.{}".format(self.name, self.VERSION)
         (args, _, _, defaults) = inspect.getargspec(self.__init__)
         s += "".join([", {}:{}".format(a, getattr(self, "_" + a)) for a, d in zip(args[-len(defaults):], defaults) if getattr(self, "_" + a) != d])
