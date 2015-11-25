@@ -3,6 +3,7 @@ import json
 import os
 import random
 import pandas as pd
+import numpy as np
 from clint.textui import progress
 import sys
 import csv
@@ -111,3 +112,18 @@ class Data():
 
     def size(self):
         return len(self.get_dataframe_all())
+
+    def filter_data(self, min_answers_per_item=100, min_answers_per_student=10):
+        self._load_file()
+        self._data = self._data[self._data.join(pd.Series(self._data.groupby("student").apply(len), name="count"), on="student")["count"] > min_answers_per_student]
+        self._data = self._data[self._data.join(pd.Series(self._data.groupby("item").apply(len), name="count"), on="item")["count"] > min_answers_per_item]
+
+
+    def trim_times(self, limit=60):
+        self._load_file()
+        self._data.loc[self._data["response_time"] < 0, "response_time"] = 0
+        self._data.loc[self._data["response_time"] > limit, "response_time"] = limit
+
+    def add_log_response_times(self):
+        self._load_file()
+        self._data["log_response_time"] = np.log(self._data["response_time"])
