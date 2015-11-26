@@ -87,17 +87,15 @@ class Evaluator:
     def __str__(self):
         return json.dumps(self.get_report(), sort_keys=True, indent=4)
 
-    def brier_graphs(self, show=True):
+    def brier_graphs(self):
         report = self.get_report()
 
         plt.figure()
-        plt.plot(report["zextra"]["brier"]["bin_prediction_means"], report["zextra"]["brier"]["bin_correct_means"])
+        plt.plot(report["extra"]["brier"]["bin_prediction_means"], report["extra"]["brier"]["bin_correct_means"])
         plt.plot((0, 1), (0, 1))
 
-        bin_count = report["zextra"]["brier"]["bin_count"]
-        counts = np.array(report["zextra"]["brier"]["bin_counts"])
+        bin_count = report["extra"]["brier"]["bin_count"]
+        counts = np.array(report["extra"]["brier"]["bin_counts"])
         bins = (np.arange(bin_count) + 0.5) / bin_count
         plt.bar(bins, counts / max(counts), width=(0.5 / bin_count), alpha=0.5)
         plt.title(self._model)
-        if show:
-            plt.show()

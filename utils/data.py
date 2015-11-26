@@ -130,3 +130,18 @@ class Data():
     def add_log_response_times(self):
         self._load_file()
         self._data["log_response_time"] = np.log(self._data["response_time"])
+
+    def get_skill_structure(self, filename="skills.csv"):
+        file = self._filename.split("/")
+        file[-1] = filename
+        skills = pd.read_csv(os.path.join(*file), index_col="id")
+        map = {}
+        for id, skill in skills.iterrows():
+            map[id] = int(skill["parent"]) if not pd.isnull(skill["parent"]) else None
+        return map
+
+    def get_item_assignment(self, filename="items.csv"):
+        file = self._filename.split("/")
+        file[-1] = filename
+        items = pd.read_csv(os.path.join(*file), index_col="id")
+        return dict(zip(items.index, items["skill"]))
