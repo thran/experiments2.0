@@ -3,8 +3,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-data = Data("../data/matmat/2015-11-20/answers.pd")
-
 
 def response_times(data):
     data.filter_data()
@@ -54,7 +52,31 @@ def answer_count(data, per_student=True, per_item=True, student_drop_off=True):
         plt.ylabel("percentage of students")
         plt.title("Student drop-off")
 
+
+def success_rate(data, per_student=True, per_item=True):
+    data.filter_data()
+    df = data.get_dataframe_all()
+
+    if per_student:
+        plt.figure()
+        sns.distplot(df.groupby("student")["correct"].mean(), kde=False, bins=50, label="", hist_kws={"range": [0, 1]})
+        plt.xlabel("success rate")
+        plt.ylabel("student count")
+        plt.title("Success rate distribution per student")
+
+    if per_item:
+        plt.figure()
+        sns.distplot(df.groupby("item")["correct"].mean(), kde=False, bins=50, label="", hist_kws={"range": [0, 1]})
+        plt.xlabel("success rate")
+        plt.ylabel("item count")
+        plt.title("Success rate distribution per item")
+
+
+
+data = Data("../data/matmat/2015-11-20/answers.pd")
+
 # response_times(data)
-answer_count(data, per_student=False, per_item=False)
+# answer_count(data, per_student=False, per_item=False)
+success_rate(data, per_student=False)
 
 plt.show()
