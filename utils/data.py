@@ -124,7 +124,7 @@ class Data():
 
     def trim_times(self, limit=60):
         self._load_file()
-        self._data.loc[self._data["response_time"] < 0, "response_time"] = 0
+        self._data.loc[self._data["response_time"] < 0.5, "response_time"] = 0.5
         self._data.loc[self._data["response_time"] > limit, "response_time"] = limit
 
     def add_log_response_times(self):

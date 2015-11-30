@@ -4,25 +4,29 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def response_times(data):
+def response_times(data, time_dist=True, mean_times_dist=True):
     data.filter_data()
     data.trim_times()
     data.add_log_response_times()
     df = data.get_dataframe_all()
 
-    plt.figure()
-    sns.distplot(df["response_time"], hist=False, bins=30, label="all")
-    sns.distplot(df[df["answer"].isnull()]["response_time"], hist=False, bins=30, label="without answer (null)")
-    sns.distplot(df[df["correct"] == True]["response_time"], hist=False, bins=30, label="correct answer")
-    sns.distplot(df[df["correct"] == False][~df["answer"].isnull()]["response_time"], hist=False, bins=30, label="wrong answer (not null)")
-    plt.title("Response time distribution per answer type")
+    if time_dist:
+        plt.figure()
+        sns.distplot(df["response_time"], hist=False, bins=30, label="all")
+        sns.distplot(df[df["answer"].isnull()]["response_time"], hist=False, bins=30, label="without answer (null)")
+        sns.distplot(df[df["correct"] == True]["response_time"], hist=False, bins=30, label="correct answer")
+        sns.distplot(df[df["correct"] == False][~df["answer"].isnull()]["response_time"], hist=False, bins=30, label="wrong answer (not null)")
+        plt.title("Response time distribution per answer type")
 
-    plt.figure()
-    sns.distplot(np.exp(df.groupby("item")["log_response_time"].mean()), hist=False, label="items ({})".format(len(data.get_items())))
-    sns.distplot(np.exp(df.groupby("student")["log_response_time"].mean()), hist=False, label="students ({})".format(len(data.get_students())))
-    sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("item")["log_response_time"].mean()), hist=False, label="items - with answer({})".format(len(data.get_items())))
-    sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("student")["log_response_time"].mean()), hist=False, label="students - with answer ({})".format(len(data.get_students())))
-    plt.title("Distribution of median time (exp of median of log times)")
+    if mean_times_dist:
+        plt.figure()
+        sns.distplot(np.exp(df.groupby("item")["log_response_time"].mean()), hist=False, label="items ({})".format(len(data.get_items())))
+        sns.distplot(np.exp(df.groupby("student")["log_response_time"].mean()), hist=False, label="students ({})".format(len(data.get_students())))
+        sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("item")["log_response_time"].mean()), hist=False, label="items - with answer({})".format(len(data.get_items())))
+        sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("student")["log_response_time"].mean()), hist=False, label="students - with answer ({})".format(len(data.get_students())))
+
+
+        plt.title("Distribution of median time (exp of median of log times)")
 
 
 def answer_count(data, per_student=True, per_item=True, student_drop_off=True):
@@ -75,8 +79,8 @@ def success_rate(data, per_student=True, per_item=True):
 
 data = Data("../data/matmat/2015-11-20/answers.pd")
 
-# response_times(data)
-# answer_count(data, per_student=False, per_item=False)
-success_rate(data, per_student=False)
+response_times(data, time_dist=False, mean_times_dist=True)
+# answer_count(data, per_student=False, per_item=True, student_drop_off=False)
+# success_rate(data, per_student=False)
 
 plt.show()
