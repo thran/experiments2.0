@@ -18,8 +18,26 @@ class Evaluator:
     def clean(self):
         self._runner.clean()
 
-    def _evaluate(self, report, brier_bins=20):
-        print("Evaluating", self._hash, self._data, self._model)
+    def evaluate(self, force_evaluate=False, answer_filters=None, **kwargs):
+        answer_filters = answer_filters if answer_filters is not None else {}
+        report = self._load_report()
+        self._data.join_predictions(pd.read_pickle(self._runner.get_log_filename()))
+        if force_evaluate or "evaluated" not in report:
+            print("Evaluating", self._hash, self._data, self._model)
+            report.update(self._basic_metrics(self._data.iter_test(), **kwargs))
+
+        if answer_filters is not None:
+            for filter_name, filter_function in answer_filters.items():
+                if force_evaluate or filter_name not in report:
+                    print("Evaluating", filter_name, self._hash, self._data, self._model)
+                    data = filter_function(self._data.get_dataframe_test())
+                    report[filter_name] = self._basic_metrics(self._data.iter(data=data), **kwargs)
+
+        self._save_report(report)
+        return report
+
+    def _basic_metrics(self, data, brier_bins=20):
+        report = {}
 
         n = 0           # log count
         sse = 0         # sum of square error
@@ -28,9 +46,7 @@ class Evaluator:
         brier_correct = np.zeros(brier_bins)        # sum of correct answers in bins
         brier_prediction = np.zeros(brier_bins)     # sum of predictions in bins
 
-        self._data.join_predictions(pd.read_pickle(self._runner.get_log_filename()))
-
-        for log in self._data.iter_test():
+        for log in data:
             n += 1
             sse += (log["prediction"] - log["correct"]) ** 2
             llsum += math.log(max(0.0001, log["prediction"] if log["correct"] else (1 - log["prediction"])))
@@ -70,19 +86,17 @@ class Evaluator:
         }
         report["evaluated"] = True
 
-        self.save_report(report)
         return report
 
     def get_report(self, force_evaluate=False, force_run=False, **kwargs):
         self._hash = self._runner.run(force=force_run)
-        report = json.load(open(self._runner.get_report_filename()))
-        if force_evaluate or force_run or "evaluated" not in report:
+        return self.evaluate(force_evaluate=force_evaluate or force_run, **kwargs)
 
-            self._evaluate(report, **kwargs)
-        return report
-
-    def save_report(self, report):
+    def _save_report(self, report):
         json.dump(report, open(self._runner.get_report_filename(), "w"), indent=4)
+
+    def _load_report(self):
+        return json.load(open(self._runner.get_report_filename()))
 
     def __str__(self):
         return json.dumps(self.get_report(), sort_keys=True, indent=4)

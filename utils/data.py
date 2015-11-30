@@ -145,3 +145,7 @@ class Data():
         file[-1] = filename
         items = pd.read_csv(os.path.join(*file), index_col="id")
         return dict(zip(items.index, items["skill"]))
+
+
+def filter_students_with_many_answers(number_of_answers=50):
+    return lambda data: data[data.join(pd.Series(data.groupby("student").apply(len), name="count"), on="student")["count"] >= number_of_answers]

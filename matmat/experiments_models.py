@@ -14,12 +14,16 @@ compare_models(d, [
     EloPriorCurrentModel(),
     EloHierarchicalModel(),
     EloHierarchicalModel(alpha=0.25, beta=0.02),
-], dont=1)
+], dont=0, force_evaluate=0, answer_filters={
+    "long (50) student": data.filter_students_with_many_answers(),
+    "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
+    "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),
+})
 
 
-evaluator.Evaluator(d, EloHierarchicalModel(alpha=0.25, beta=0.02)).brier_graphs()
-evaluator.Evaluator(d, EloPriorCurrentModel()).brier_graphs()
-evaluator.Evaluator(d, ItemAvgModel()).brier_graphs()
+# evaluator.Evaluator(d, EloHierarchicalModel(alpha=0.25, beta=0.02)).brier_graphs()
+# evaluator.Evaluator(d, EloPriorCurrentModel()).brier_graphs()
+# evaluator.Evaluator(d, ItemAvgModel()).brier_graphs()
 
 
 
