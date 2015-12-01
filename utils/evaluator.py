@@ -62,7 +62,10 @@ class Evaluator:
         report["extra"] = {"anser_mean": answer_mean}
         report["rmse"] = math.sqrt(sse / n)
         report["log-likely-hood"] = llsum
-        report["AUC"] = metrics.roc_auc_score(self._data.get_dataframe_test()["correct"], self._data.get_dataframe_test()   ["prediction"])
+        try:
+            report["AUC"] = metrics.roc_auc_score(self._data.get_dataframe_test()["correct"], self._data.get_dataframe_test()["prediction"])
+        except ValueError:
+            pass
 
         # brier
         brier_prediction_means = brier_prediction / brier_counts

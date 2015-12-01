@@ -25,13 +25,16 @@ def compare_models(data, models, dont=False, answer_filters=None, metric="rmse",
             if diff_to is not None:
                 print("RMSE diff: {:.5f}".format(diff_to - r["rmse"]))
             print("LL: {:.6}".format(r["log-likely-hood"]))
-            print("AUC: {:.4}".format(r["AUC"]))
+            if "AUC" in r:
+                print("AUC: {:.4}".format(r["AUC"]))
             print("Brier resolution: {:.4}".format(r["brier"]["resolution"]))
             print("Brier reliability: {:.3}".format(r["brier"]["reliability"]))
             print("Brier uncertainty: {:.3}".format(r["brier"]["uncertainty"]))
             print("=" * 50)
 
             df.loc[len(df)] = (str(model), filter_name, r[metric])
+
+    plt.title(data)
 
     sns.barplot(x="data", y=metric, hue="model", data=df,
                 hue_order=sorted(df["model"].unique(), key=lambda i: df[df["model"]==i][metric].mean()),

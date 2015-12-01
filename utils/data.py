@@ -12,7 +12,7 @@ csv.field_size_limit(sys.maxsize)
 
 
 class Data():
-    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False):
+    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False, response_modification=None):
         self._filename = filename
         self._test_subset = test_subset
         self._data = None
@@ -21,6 +21,7 @@ class Data():
         self._train_size = train_size
         self._train_seed = train_seed
         self._only_train = only_train
+        self._response_modification = response_modification
 
         self.VERSION = 1
 
@@ -56,6 +57,9 @@ class Data():
         for req in ["item", "student", "correct", "response_time"]:
             if req not in self._data.columns:
                 raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
+
+        if self._response_modification is not None:
+            self._data = self._response_modification.modify(self._data)
 
         if self._test_subset:
             self._data = self._data[:self._test_subset]
@@ -147,5 +151,40 @@ class Data():
         return dict(zip(items.index, items["skill"]))
 
 
+class ResponseModificator():
+    def __init__(self):
+        pass
+
+    def modify(self, data):
+        return data
+
+    def __str__(self):
+        s = "ResMod"
+        (args, _, _, defaults) = inspect.getargspec(self.__init__)
+        defaults = defaults if defaults else []
+        s += "".join([", {}:{}".format(a, getattr(self, "_" + a)) for a, d in zip(args[-len(defaults):], defaults) if getattr(self, "_" + a) != d])
+        return s
+
+
+class TimeLimitResponseModificator(ResponseModificator):
+    def __init__(self, limits=None):
+        super().__init__()
+        self._limits = limits
+
+    def modify(self, data):
+        for limit, value in self._limits:
+            data.loc[(data["response_time"] > limit) & (data["correct"] > 0), "correct"] = value
+        return data
+
+
 def filter_students_with_many_answers(number_of_answers=50):
     return lambda data: data[data.join(pd.Series(data.groupby("student").apply(len), name="count"), on="student")["count"] >= number_of_answers]
+
+
+def transform_response_by_time(limits=None):
+    def fce(data):
+        data = data.copy(True)
+        m = TimeLimitResponseModificator(limits)
+        return m.modify(data)
+
+    return fce
