@@ -80,7 +80,7 @@ if 0:
     plot_item_values(d, get_difficulty(d, m, normalize=True))
     # plot_skill_values(d, get_mean_skill(d, m))
 
-if 1:
+if 0:
     compare_models(d, d,
         EloPriorCurrentModel(KC=2, KI=0.5),
         # EloPriorCurrentModel(KC=2, KI=0.5),
@@ -89,5 +89,12 @@ if 1:
         EloConcepts(concepts=concepts),
     n1=False, n2=False)
     # n1=True, n2=True)
+
+if 1:
+    df = d.get_dataframe_all()
+    df = df.join(d.get_items_df(), on="item", lsuffix="item_")
+    plot_skill_values(d, df.groupby("skill").size())
+    plt.ylim(0, 2000)
+    # plot_item_values(d, d.get_dataframe_all().groupby("item").size())
 
 plt.show()
