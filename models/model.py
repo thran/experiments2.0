@@ -16,7 +16,7 @@ class Model:
             raise AttributeError("Model version not specified")
         s = "{}.{}".format(self.name, self.VERSION)
         (args, _, _, defaults) = inspect.getargspec(self.__init__)
-        s += "".join([", {}:{}".format(a, getattr(self, "_" + a)) for a, d in zip(args[-len(defaults):], defaults) if getattr(self, "_" + a) != d])
+        s += "".join([", {}:{}".format(a, str(getattr(self, "_" + a))) for a, d in zip(args[-len(defaults):], defaults) if getattr(self, "_" + a) != d])
         return s
 
     def _sigmoid(self, x, c=0):
