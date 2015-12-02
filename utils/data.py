@@ -12,7 +12,7 @@ csv.field_size_limit(sys.maxsize)
 
 
 class Data():
-    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False, response_modification=None):
+    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False, filter=None, response_modification=None):
         self._filename = filename
         self._test_subset = test_subset
         self._data = None
@@ -21,6 +21,7 @@ class Data():
         self._train_size = train_size
         self._train_seed = train_seed
         self._only_train = only_train
+        self._filter = filter
         self._response_modification = response_modification
 
         self.VERSION = 1
@@ -57,6 +58,9 @@ class Data():
         for req in ["item", "student", "correct", "response_time"]:
             if req not in self._data.columns:
                 raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
+
+        if self._filter is not None:
+            self.filter_data(self._filter[0], self._filter[1])
 
         if self._response_modification is not None:
             self._data = self._response_modification.modify(self._data)
@@ -136,19 +140,25 @@ class Data():
         self._data["log_response_time"] = np.log(self._data["response_time"])
 
     def get_skill_structure(self, filename="skills.csv"):
-        file = self._filename.split("/")
-        file[-1] = filename
-        skills = pd.read_csv(os.path.join(*file), index_col="id")
+        skills = self.get_skills_df(filename)
         map = {}
         for id, skill in skills.iterrows():
             map[id] = int(skill["parent"]) if not pd.isnull(skill["parent"]) else None
         return map
 
-    def get_item_assignment(self, filename="items.csv"):
+    def get_skills_df(self, filename="skills.csv"):
         file = self._filename.split("/")
         file[-1] = filename
-        items = pd.read_csv(os.path.join(*file), index_col="id")
+        return pd.read_csv(os.path.join(*file), index_col="id")
+
+    def get_item_assignment(self, filename="items.csv"):
+        items =self.get_items_df(filename)
         return dict(zip(items.index, items["skill"]))
+
+    def get_items_df(self, filename="items.csv"):
+        file = self._filename.split("/")
+        file[-1] = filename
+        return pd.read_csv(os.path.join(*file), index_col="id")
 
 
 class ResponseModificator():
