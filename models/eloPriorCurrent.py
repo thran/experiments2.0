@@ -6,7 +6,7 @@ class EloPriorCurrentModel(Model):
 
     def __init__(self, alpha=1.0, beta=0.1, KC=1, KI=1):
         Model.__init__(self)
-        self.VERSION = 1
+        self.VERSION = 2
         self.name = "Prior-current"
 
         self._alpha = alpha
@@ -38,9 +38,8 @@ class EloPriorCurrentModel(Model):
         if self.first_attempt[item][student]:
             self.global_skill[student] += self.decay_function(self.student_attempts[student]) * dif
             self.difficulty[item] -= self.decay_function(self.item_attempts[item]) * dif
+            self.student_attempts[student] += 1
+            self.item_attempts[item] += 1
+            self.first_attempt[item][student] = False
         K = self._KC if correct else self._KI
         self.local_skill[item][student] += K * dif
-        self.student_attempts[student] += 1
-        self.item_attempts[item] += 1
-
-        self.first_attempt[item][student] = False

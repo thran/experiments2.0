@@ -1,5 +1,6 @@
 from utils import data, evaluator, utils
 from models.eloPriorCurrent import EloPriorCurrentModel
+from models.eloConcepts import EloConcepts
 from models.model import AvgModel, ItemAvgModel
 from models.eloHierarchical import EloHierarchicalModel
 from utils.model_comparison import compare_models
@@ -7,20 +8,23 @@ import matplotlib.pylab as plt
 import seaborn as sns
 import numpy as np
 
-d = data.Data("../data/matmat/2015-11-20/answers.pd", )
+d = data.Data("../data/matmat/2015-11-20/answers.pd", only_first=True)
 # d = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
 # d = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.66), (10, 0.33)]))
+concepts = d.get_concepts()
 
 compare_models(d, [
-    # AvgModel(),
-    # ItemAvgModel(),
-    EloPriorCurrentModel(),
+    AvgModel(),
+    ItemAvgModel(),
+    # EloPriorCurrentModel(),
     EloPriorCurrentModel(KC=2, KI=0.5),
-    EloHierarchicalModel(),
-    EloHierarchicalModel(KC=1, KI=0.75),
+    # EloHierarchicalModel(),
+    # EloHierarchicalModel(KC=1, KI=0.75),
     EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02),
-    EloHierarchicalModel(alpha=0.25, beta=0.02),
-], dont=1, force_evaluate=0, force_run=0, answer_filters={
+    # EloHierarchicalModel(alpha=0.25, beta=0.02),
+    EloConcepts(),
+    EloConcepts(concepts=concepts),
+], dont=0, force_evaluate=0, force_run=0, answer_filters={
     # "long (50) student": data.filter_students_with_many_answers(),
     # "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
     # "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),
@@ -32,7 +36,7 @@ compare_models(d, [
 # evaluator.Evaluator(d, EloPriorCurrentModel()).brier_graphs()
 # evaluator.Evaluator(d, ItemAvgModel()).brier_graphs()
 
-if 1:
+if 0:
     utils.grid_search(d, EloHierarchicalModel,
                       # {"KC": 1, "KI": 0.75}, {
                       {"alpha": 0.25, "beta": 0.02}, {

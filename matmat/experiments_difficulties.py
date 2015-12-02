@@ -1,5 +1,6 @@
 import random
 
+from models.eloConcepts import EloConcepts
 from utils import data, evaluator, utils, runner
 from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import AvgModel, ItemAvgModel
@@ -10,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 d = data.Data("../data/matmat/2015-11-20/answers.pd")
+concepts = d.get_concepts()
 # d_filtered = data.Data("../data/matmat/2015-11-20/answers.pd", filter=(10, 10))
 d2 = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
 
@@ -70,18 +72,22 @@ def get_difficulty(data, model, normalize=False):
             items.loc[(items["skill_lvl_1"] == skill) | (items["skill_lvl_2"] == skill) | (items["skill_lvl_3"] == skill), "difficulty"] -= value
     return items["difficulty"]
 
-# m = EloPriorCurrentModel(KC=2, KI=0.5)
-m = EloHierarchicalModel(alpha=0.25, beta=0.02)
-# plot_item_values(d, get_difficulty(d, m, normalize=True))
-plot_skill_values(d, get_mean_skill(d, m))
-
 if 0:
+    # m = EloPriorCurrentModel(KC=2, KI=0.5)
+    m = EloHierarchicalModel(alpha=0.25, beta=0.02)
+    # m = EloConcepts(concepts=concepts)
+    plt.title(m)
+    plot_item_values(d, get_difficulty(d, m, normalize=True))
+    # plot_skill_values(d, get_mean_skill(d, m))
+
+if 1:
     compare_models(d, d,
         EloPriorCurrentModel(KC=2, KI=0.5),
         # EloPriorCurrentModel(KC=2, KI=0.5),
-        EloHierarchicalModel(alpha=0.25, beta=0.02),
         # EloHierarchicalModel(alpha=0.25, beta=0.02),
-    n1=False, n2=True)
+        # EloHierarchicalModel(alpha=0.25, beta=0.02),
+        EloConcepts(concepts=concepts),
+    n1=False, n2=False)
     # n1=True, n2=True)
 
 plt.show()

@@ -12,7 +12,7 @@ csv.field_size_limit(sys.maxsize)
 
 
 class Data():
-    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False, filter=None, response_modification=None):
+    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False, only_first=False, filter=None, response_modification=None):
         self._filename = filename
         self._test_subset = test_subset
         self._data = None
@@ -20,6 +20,7 @@ class Data():
         self._data_test = None
         self._train_size = train_size
         self._train_seed = train_seed
+        self._only_first = only_first
         self._only_train = only_train
         self._filter = filter
         self._response_modification = response_modification
@@ -58,6 +59,12 @@ class Data():
         for req in ["item", "student", "correct", "response_time"]:
             if req not in self._data.columns:
                 raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
+
+        if self._only_first:
+            filtered = self._data.drop_duplicates(['student', 'item'])
+            filtered["index"] = filtered["id"]
+            filtered.set_index("index", inplace=True)
+            self._data = filtered
 
         if self._filter is not None:
             self.filter_data(self._filter[0], self._filter[1])
@@ -152,13 +159,22 @@ class Data():
         return pd.read_csv(os.path.join(*file), index_col="id")
 
     def get_item_assignment(self, filename="items.csv"):
-        items =self.get_items_df(filename)
+        items = self.get_items_df(filename)
         return dict(zip(items.index, items["skill"]))
 
     def get_items_df(self, filename="items.csv"):
         file = self._filename.split("/")
         file[-1] = filename
         return pd.read_csv(os.path.join(*file), index_col="id")
+
+    def get_concepts(self, level=1):
+        items = self.get_items_df()
+        skills = self.get_skills_df()
+
+        concepts = {}
+        for concept in items["skill_lvl_" + str(level)].unique():
+            concepts[skills.loc[concept, "name"]] = list(items[items["skill_lvl_" + str(level)] == concept].index)
+        return concepts
 
 
 class ResponseModificator():
