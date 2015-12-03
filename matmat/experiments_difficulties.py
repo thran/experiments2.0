@@ -75,6 +75,7 @@ def get_difficulty(data, model, normalize=False):
 if 0:
     # m = EloPriorCurrentModel(KC=2, KI=0.5)
     m = EloHierarchicalModel(alpha=0.25, beta=0.02)
+    # m = ItemAvgModel()
     # m = EloConcepts(concepts=concepts)
     plt.title(m)
     plot_item_values(d, get_difficulty(d, m, normalize=True))
@@ -87,6 +88,7 @@ if 0:
         # EloHierarchicalModel(alpha=0.25, beta=0.02),
         # EloHierarchicalModel(alpha=0.25, beta=0.02),
         EloConcepts(concepts=concepts),
+        # ItemAvgModel(),
     n1=False, n2=False)
     # n1=True, n2=True)
 

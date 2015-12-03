@@ -25,6 +25,9 @@ class Model:
     def pre_process_data(self, data):
         pass
 
+    def post_process_data(self, data):
+        pass
+
     def process_data(self, data, logger=None):
         print("Processing {} on {}".format(self, data))
         print("  training")
@@ -38,6 +41,8 @@ class Model:
             self.update(answer["student"], answer["item"], prediction, answer["correct"], answer)
             if logger is not None:
                 logger(answer, prediction)
+
+        self.post_process_data(data)
 
     def predict(self, student, item, extra):
         pass
@@ -90,3 +95,6 @@ class ItemAvgModel(Model):
         self.counts[item] += 1
         if correct:
             self.corrects[item] += 1
+
+    def post_process_data(self, data):
+        self.difficulty = self.corrects / self.counts
