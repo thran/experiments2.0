@@ -61,10 +61,7 @@ class Data():
                 raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
 
         if self._only_first:
-            filtered = self._data.drop_duplicates(['student', 'item'])
-            filtered["index"] = filtered["id"]
-            filtered.set_index("index", inplace=True)
-            self._data = filtered
+            self.only_first()
 
         if self._filter is not None:
             self.filter_data(self._filter[0], self._filter[1])
@@ -136,6 +133,12 @@ class Data():
         self._data = self._data[self._data.join(pd.Series(self._data.groupby("student").apply(len), name="count"), on="student")["count"] > min_answers_per_student]
         self._data = self._data[self._data.join(pd.Series(self._data.groupby("item").apply(len), name="count"), on="item")["count"] > min_answers_per_item]
 
+    def only_first(self):
+        self._load_file()
+        filtered = self._data.drop_duplicates(['student', 'item'])
+        filtered["index"] = filtered["id"]
+        filtered.set_index("index", inplace=True)
+        self._data = filtered
 
     def trim_times(self, limit=60):
         self._load_file()
