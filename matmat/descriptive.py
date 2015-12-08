@@ -12,8 +12,8 @@ def response_times(data, time_dist=True, mean_times_dist=True):
 
     if time_dist:
         plt.figure()
-        sns.distplot(df["response_time"], hist=False, bins=30, label="all")
-        sns.distplot(df[df["answer"].isnull()]["response_time"], hist=False, bins=30, label="without answer (null)")
+        # sns.distplot(df["response_time"], hist=False, bins=30, label="all")
+        # sns.distplot(df[df["answer"].isnull()]["response_time"], hist=False, bins=30, label="without answer (null)")
         sns.distplot(df[df["correct"] == True]["response_time"], hist=False, bins=30, label="correct answer")
         sns.distplot(df[df["correct"] == False][~df["answer"].isnull()]["response_time"], hist=False, bins=30, label="wrong answer (not null)")
         plt.title("Response time distribution per answer type")
@@ -79,7 +79,7 @@ def success_rate(data, per_student=True, per_item=True):
 
 data = Data("../data/matmat/2015-11-20/answers.pd")
 
-response_times(data, time_dist=False, mean_times_dist=True)
+response_times(data, time_dist=True, mean_times_dist=False)
 # answer_count(data, per_student=False, per_item=True, student_drop_off=False)
 # success_rate(data, per_student=False)
 
