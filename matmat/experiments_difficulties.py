@@ -33,16 +33,21 @@ def plot_skill_values(data, values):
 def plot_item_values(data, values):
     plot_skill_values(data, mean_by_skill(data, values))
 
-def mean_by_skill(data, values):
+def mean_by_skill(data, values, filter_skills=None):
     items = data.get_items_df()
+    if filter_skills is not None:
+        items = items[items["skill_lvl_1"].isin(filter_skills) | items["skill_lvl_2"].isin(filter_skills)]
     items = items.join(pd.Series(values, name="value"))
     return items.groupby("skill")["value"].mean()
 
 
-def compare_models(d1, d2, m1, m2, n1=False, n2=False):
+def compare_models(d1, d2, m1, m2, filter_skills=None):
+    n1 = isinstance(m1, EloHierarchicalModel)
+    n2 = isinstance(m2, EloHierarchicalModel)
     skills = d1.get_skills_df()
-    v1 = mean_by_skill(d1, get_difficulty(d1, m1, n1))
-    v2 = mean_by_skill(d2, get_difficulty(d2, m2, n2))
+    v1 = mean_by_skill(d1, get_difficulty(d1, m1, n1), filter_skills)
+    v2 = mean_by_skill(d2, get_difficulty(d2, m2, n2), filter_skills)
+    plt.title(v1.corr(v2))
     for k, v in v1.items():
         if not np.isnan(v2[k]) and not np.isnan(v):
             plt.plot(v, v2[k], ".")
@@ -81,18 +86,20 @@ if 0:
     plot_item_values(d, get_difficulty(d, m, normalize=True))
     # plot_skill_values(d, get_mean_skill(d, m))
 
-if 0:
-    compare_models(d, d,
-        EloPriorCurrentModel(KC=2, KI=0.5),
+if 1:
+    compare_models(d, d2,
         # EloPriorCurrentModel(KC=2, KI=0.5),
+        # EloPriorCurrentModel(KC=2, KI=0.5),
+        # EloPriorCurrentModel(KC=2, KI=0.5),
+        EloHierarchicalModel(alpha=0.25, beta=0.02, KC=3.5, KI=2.50),
+        EloHierarchicalModel(alpha=0.80, beta=0.02, KC=1.0, KI=0.75),
         # EloHierarchicalModel(alpha=0.25, beta=0.02),
-        # EloHierarchicalModel(alpha=0.25, beta=0.02),
-        EloConcepts(concepts=concepts),
+        # EloConcepts(concepts=concepts),
         # ItemAvgModel(),
-    n1=False, n2=False)
+    filter_skills=[2, 27, 210]) # all skills [2, 26, 151, 209, 367]
     # n1=True, n2=True)
 
-if 1:
+if 0:
     df = d.get_dataframe_all()
     df = df.join(d.get_items_df(), on="item", lsuffix="item_")
     plot_skill_values(d, df.groupby("skill").size())
