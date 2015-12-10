@@ -7,6 +7,7 @@ import numpy as np
 from clint.textui import progress
 import sys
 import csv
+from hashlib import sha1
 
 csv.field_size_limit(sys.maxsize)
 
@@ -136,7 +137,7 @@ class Data():
     def only_first(self):
         self._load_file()
         filtered = self._data.drop_duplicates(['student', 'item'])
-        filtered["index"] = filtered["id"]
+        filtered.loc[:,"index"] = filtered["id"]
         filtered.set_index("index", inplace=True)
         self._data = filtered
 
@@ -217,3 +218,18 @@ def transform_response_by_time(limits=None):
         return m.modify(data)
 
     return fce
+
+
+def compute_corr(data, min_periods=1, method="pearson"):
+    locs = locals()
+    name = "; ".join(["{}:{}".format(name, str(locs[name])) for name in sorted(locs.keys())])
+    hash = sha1(name.encode()).hexdigest()[:20]
+    filename = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "cache", "{}.corr.pd".format(hash))
+    print(filename, name)
+    if os.path.exists(filename):
+        return pd.read_pickle(filename)
+
+    df = data.get_dataframe_all()
+    corr = df.pivot("student", "item", "correct").corr(method=method, min_periods=min_periods)
+    corr.to_pickle(filename)
+    return corr
