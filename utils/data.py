@@ -162,14 +162,29 @@ class Data():
         file[-1] = filename
         return pd.read_csv(os.path.join(*file), index_col="id")
 
+    def get_skill_id(self, skill):
+        df = self.get_skills_df()
+        pk = df[df["name"] == skill].index[0]
+        level = 0
+        current = pk
+        while not np.isnan(df.loc[current]["parent"]):
+            level += 1
+            current = int(df.loc[current]["parent"])
+        return pk, level
+
     def get_item_assignment(self, filename="items.csv"):
         items = self.get_items_df(filename)
         return dict(zip(items.index, items["skill"]))
 
-    def get_items_df(self, filename="items.csv"):
+    def get_items_df(self, filename="items.csv", with_skills=True):
         file = self._filename.split("/")
         file[-1] = filename
-        return pd.read_csv(os.path.join(*file), index_col="id")
+        items = pd.read_csv(os.path.join(*file), index_col="id")
+        if not with_skills:
+            return items
+        skills = self.get_skills_df()
+        return items.join(skills, on="skill")
+
 
     def get_concepts(self, level=1):
         items = self.get_items_df()
@@ -220,7 +235,7 @@ def transform_response_by_time(limits=None):
     return fce
 
 
-def compute_corr(data, min_periods=1, method="pearson"):
+def compute_corr(data, min_periods=1, method="pearson", merge_skills=False):
     locs = locals()
     name = "; ".join(["{}:{}".format(name, str(locs[name])) for name in sorted(locs.keys())])
     hash = sha1(name.encode()).hexdigest()[:20]
@@ -230,6 +245,15 @@ def compute_corr(data, min_periods=1, method="pearson"):
         return pd.read_pickle(filename)
 
     df = data.get_dataframe_all()
-    corr = df.pivot("student", "item", "correct").corr(method=method, min_periods=min_periods)
-    corr.to_pickle(filename)
-    return corr
+    if not merge_skills:
+        corr = df.pivot("student", "item", "correct").corr(method=method, min_periods=min_periods)
+        corr.to_pickle(filename)
+        return corr
+    else:
+        items = data.get_items_df()
+        df = df.join(items["skill_lvl_3"], on="item")
+        df = df[~df["skill_lvl_3"].isnull()]
+        df = pd.DataFrame(df.groupby(["student", "skill_lvl_3"])["correct"].mean())
+        corr = df.reset_index().pivot("student", "skill_lvl_3", "correct").corr(method=method, min_periods=min_periods)
+        corr.to_pickle(filename)
+        return corr
