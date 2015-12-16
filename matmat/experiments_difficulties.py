@@ -106,29 +106,29 @@ if 0:
     plt.ylim(0, 2000)
     # plot_item_values(d, d.get_dataframe_all().groupby("item").size())
 
-if 1:
-    d.filter_data(0, 100)
-    the_skill = "division1"
-    pk, level = d.get_skill_id(the_skill)
-    d.trim_times()
-    d.add_log_response_times()
-    m = EloPriorCurrentModel(KC=2, KI=0.5)
-    items = d.get_items_df()
-    items = items[items["visualization"] != "pairing"]
-    items = items.join(get_difficulty(d, m))
-    items = items.join(pd.Series(d.get_dataframe_all().groupby(["item"])["log_response_time"].mean(), name="log_response_time_mean"))
 
-    if 0:
-        skills = d.get_skills_df()
+def difficulty_vs_time(data, the_skill, concepts=False):
+    data.filter_data(0, 100)
+    pk, level = data.get_skill_id(the_skill)
+    data.trim_times()
+    data.add_log_response_times()
+    m = EloPriorCurrentModel(KC=2, KI=0.5)
+    items = data.get_items_df()
+    items = items[items["visualization"] != "pairing"]
+    items = items.join(get_difficulty(data, m))
+    items = items.join(pd.Series(data.get_dataframe_all().groupby(["item"])["log_response_time"].mean(), name="log_response_time_mean"))
+    items = items[items["skill_lvl_"+str(level)] == pk]
+
+    if concepts:
+        skills = data.get_skills_df()
         skills = skills.join(items.groupby("skill_lvl_3")["difficulty"].mean())
         skills = skills.join(items.groupby("skill_lvl_3")["log_response_time_mean"].mean())
-        skills = skills[skills["parent"] == pk]
+        skills = skills[skills.index.isin(items["skill_lvl_3"].unique())]
         for id, skill in skills.iterrows():
             plt.plot(skill["difficulty"], skill["log_response_time_mean"], "ok")
             plt.text(skill["difficulty"], skill["log_response_time_mean"], skill["name"])
     else:
         colors = "rgbyk"
-        items = items[items["skill_lvl_"+str(level)] == pk]
         visualizations = list(items["visualization"].unique())
         for id, item in items.iterrows():
             plt.plot(item["difficulty"], item["log_response_time_mean"], "o", color=colors[visualizations.index(item["visualization"])])
