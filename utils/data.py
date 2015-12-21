@@ -62,10 +62,10 @@ class Data():
                 raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
 
         if self._only_first:
-            self.only_first()
+            self._filter_only_first()
 
         if self._filter is not None:
-            self.filter_data(self._filter[0], self._filter[1])
+            self._filter_data(self._filter[0], self._filter[1])
 
         if self._response_modification is not None:
             self._data = self._response_modification.modify(self._data)
@@ -130,12 +130,25 @@ class Data():
         return len(self.get_dataframe_all())
 
     def filter_data(self, min_answers_per_item=100, min_answers_per_student=10):
+        if self._data is not None:
+            self._data = None
+            print("Warning loading data again")
+        self._filter = min_answers_per_item, min_answers_per_student
+        self._load_file()
+
+    def _filter_data(self, min_answers_per_item=100, min_answers_per_student=10):
         self._load_file()
         self._data = self._data[self._data.join(pd.Series(self._data.groupby("student").apply(len), name="count"), on="student")["count"] > min_answers_per_student]
         self._data = self._data[self._data.join(pd.Series(self._data.groupby("item").apply(len), name="count"), on="item")["count"] > min_answers_per_item]
 
     def only_first(self):
+        if self._data is not None:
+            self._data = None
+            print("Warning loading data again")
+        self._only_first = True
         self._load_file()
+
+    def _filter_only_first(self):
         filtered = self._data.drop_duplicates(['student', 'item'])
         filtered.loc[:,"index"] = filtered["id"]
         filtered.set_index("index", inplace=True)
