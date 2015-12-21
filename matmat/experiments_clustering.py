@@ -13,7 +13,7 @@ d = data.Data("../data/matmat/2015-12-16/answers.pd", only_first=True)
 dt = data.Data("../data/matmat/2015-12-16/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]), only_first=True)
 
 
-def item_clustering(data, skill, cluster_number=3):
+def item_clustering(data, skill, cluster_number=3, plot=True):
     pk, level = data.get_skill_id(skill)
     items = data.get_items_df()
     items = items[items["skill_lvl_" + str(level)] == pk]
@@ -29,25 +29,26 @@ def item_clustering(data, skill, cluster_number=3):
     # sc = SpectralClusterer(corr, kcut=30, mutual=True)
     labels = sc.run(cluster_number=cluster_number, KMiter=50, sc_type=2)
 
-    colors = "rgbyk"
-    visualizations = list(items["visualization"].unique())
+    if plot:
+        colors = "rgbyk"
+        visualizations = list(items["visualization"].unique())
 
-    for i, p in enumerate(corr.columns):
-        item = items.loc[p]
-        plt.plot(sc.eig_vect[i,1], sc.eig_vect[i,2], "o", color=colors[visualizations.index(item["visualization"])])
-        # plt.plot(sc.eig_vect[i, 1], sc.eig_vect[i, 2], "o", color=colors[labels[i]])
-        plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], item["name"])
+        for i, p in enumerate(corr.columns):
+            item = items.loc[p]
+            plt.plot(sc.eig_vect[i,1], sc.eig_vect[i,2], "o", color=colors[visualizations.index(item["visualization"])])
+            # plt.plot(sc.eig_vect[i, 1], sc.eig_vect[i, 2], "o", color=colors[labels[i]])
+            plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], item["name"])
 
-    for i, vis in enumerate(visualizations):
-        plt.plot(0, 0, "o", color=colors[i], label=vis)
-    plt.title(data)
+        for i, vis in enumerate(visualizations):
+            plt.plot(0, 0, "o", color=colors[i], label=vis)
+        plt.title(data)
 
-    plt.legend(loc=3)
+        plt.legend(loc=3)
 
     return labels
 
 
-def concept_clustering(data, skill, cluster_number=3):
+def concept_clustering(data, skill, cluster_number=3, plot=True):
     pk, level = data.get_skill_id(skill)
     items = data.get_items_df()
     items = items[items["skill_lvl_" + str(level)] == pk]
@@ -66,13 +67,14 @@ def concept_clustering(data, skill, cluster_number=3):
         sc = SpectralClusterer(corr, kcut=corr.shape[0] * 0.5, mutual=False)
         labels = sc.run(cluster_number=cluster_number, KMiter=50, sc_type=2)
 
-    colors = "rgbyk"
-    for i, p in enumerate(corr.columns):
-        skill = skills.loc[int(p)]
-        plt.plot(sc.eig_vect[i, 1], sc.eig_vect[i, 2], "o", color=colors[labels[i]])
-        plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], skill["name"])
+    if plot:
+        colors = "rgbyk"
+        for i, p in enumerate(corr.columns):
+            skill = skills.loc[int(p)]
+            plt.plot(sc.eig_vect[i, 1], sc.eig_vect[i, 2], "o", color=colors[labels[i]])
+            plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], skill["name"])
+        plt.title(data)
 
-    plt.title(data)
     return labels
 
 # item_clustering(d, "numbers <= 20")
@@ -80,7 +82,7 @@ def concept_clustering(data, skill, cluster_number=3):
 # concept_clustering(d, "division")
 
 
-def hierarchical_clustering(data, skill,  method='single', metric='euclidean', dendrogram=True, concepts=False, corr_as_vectors=False):
+def hierarchical_clustering(data, skill,  method='single', metric='euclidean', dendrogram=True, concepts=False, cluster_number=3, corr_as_vectors=False):
     pk, level = data.get_skill_id(skill)
     items = data.get_items_df()
     skills = data.get_skills_df()
@@ -109,6 +111,9 @@ def hierarchical_clustering(data, skill,  method='single', metric='euclidean', d
         plt.xlabel('items' if not concepts else "concepts")
         plt.ylabel('distance')
         hr.dendrogram(Z, leaf_rotation=90., leaf_font_size=10., labels=labels)
+
+    Z[Z < 0] = 0
+    return hr.fcluster(Z, cluster_number, "maxclust")
 
 
 def all_in_one(data, skill, concepts):
