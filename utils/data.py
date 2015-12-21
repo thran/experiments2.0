@@ -244,7 +244,7 @@ def compute_corr(data, min_periods=1, method="pearson", merge_skills=False):
     if os.path.exists(filename):
         return pd.read_pickle(filename)
 
-    df = data.get_dataframe_all()
+    df = data.get_dataframe_train()
     if not merge_skills:
         corr = df.pivot("student", "item", "correct").corr(method=method, min_periods=min_periods)
         corr.to_pickle(filename)
