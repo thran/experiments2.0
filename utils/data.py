@@ -74,7 +74,7 @@ class Data():
             self._data = self._data[:self._test_subset]
 
         if self._train_size is not None:
-            if self._train_seed:
+            if self._train_seed is not None:
                 random.seed(self._train_seed)
                 students = self.get_students()
                 selected_students = random.sample(students, int(len(students) * self._train_size))

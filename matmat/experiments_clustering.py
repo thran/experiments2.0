@@ -13,7 +13,7 @@ d = data.Data("../data/matmat/2015-12-16/answers.pd", only_first=True)
 dt = data.Data("../data/matmat/2015-12-16/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]), only_first=True)
 
 
-def item_clustering(data, skill):
+def item_clustering(data, skill, cluster_number=3):
     pk, level = data.get_skill_id(skill)
     items = data.get_items_df()
     items = items[items["skill_lvl_" + str(level)] == pk]
@@ -27,7 +27,7 @@ def item_clustering(data, skill):
 
     sc = SpectralClusterer(corr, kcut=corr.shape[0] / 2, mutual=True)
     # sc = SpectralClusterer(corr, kcut=30, mutual=True)
-    labels = sc.run(cluster_number=3, KMiter=50,  sc_type=2)
+    labels = sc.run(cluster_number=cluster_number, KMiter=50, sc_type=2)
 
     colors = "rgbyk"
     visualizations = list(items["visualization"].unique())
@@ -44,8 +44,10 @@ def item_clustering(data, skill):
 
     plt.legend(loc=3)
 
+    return labels
 
-def concept_clustering(data, skill):
+
+def concept_clustering(data, skill, cluster_number=3):
     pk, level = data.get_skill_id(skill)
     items = data.get_items_df()
     items = items[items["skill_lvl_" + str(level)] == pk]
@@ -59,10 +61,10 @@ def concept_clustering(data, skill):
 
     try:
         sc = SpectralClusterer(corr, kcut=corr.shape[0] * 0.5, mutual=True)
-        labels = sc.run(cluster_number=3, KMiter=50,  sc_type=2)
+        labels = sc.run(cluster_number=cluster_number, KMiter=50, sc_type=2)
     except np.linalg.linalg.LinAlgError:
         sc = SpectralClusterer(corr, kcut=corr.shape[0] * 0.5, mutual=False)
-        labels = sc.run(cluster_number=3, KMiter=50,  sc_type=2)
+        labels = sc.run(cluster_number=cluster_number, KMiter=50, sc_type=2)
 
     colors = "rgbyk"
     for i, p in enumerate(corr.columns):
@@ -71,6 +73,7 @@ def concept_clustering(data, skill):
         plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], skill["name"])
 
     plt.title(data)
+    return labels
 
 # item_clustering(d, "numbers <= 20")
 
@@ -138,7 +141,7 @@ if 0:
             all_in_one(dat, skill, concepts=True)
             plt.savefig("results/concepts/all_in_one/{}{}.png".format(skill, " - time" if i else ""))
 
-if 1:
+if 0:
     skills = ["numbers", "numbers <= 10", "numbers <= 20"]
     for skill in skills:
         for i, dat in enumerate([d, dt]):
@@ -148,7 +151,7 @@ if 1:
             all_in_one(dat, skill, concepts=False)
             plt.savefig("results/concepts/all_in_one/items - {}{}.png".format(skill, " - time" if i else ""))
 
-# all_in_one(d, "numbers <= 20", concepts=False)
+# all_in_one(d, "numbers", concepts=False)
 # all_in_one(dt, "numbers", concepts=True)
 # all_in_one(d, "subtraction <= 10", concepts=True)
 # plt.show()
