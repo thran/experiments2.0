@@ -43,3 +43,9 @@ class EloPriorCurrentModel(Model):
             self.first_attempt[item][student] = False
         K = self._KC if correct else self._KI
         self.local_skill[item][student] += K * dif
+
+    def get_skills(self, students):
+        return [self.global_skill[s] for s in students]
+
+    def get_difficulties(self, items):
+        return [self.difficulty[i] for i in items]
