@@ -211,13 +211,13 @@ class Data():
 
 class ResponseModificator():
     def __init__(self):
-        pass
+        self._name = "ResMod"
 
     def modify(self, data):
         return data
 
     def __str__(self):
-        s = "ResMod"
+        s = self._name
         (args, _, _, defaults) = inspect.getargspec(self.__init__)
         defaults = defaults if defaults else []
         s += "".join([", {}:{}".format(a, getattr(self, "_" + a)) for a, d in zip(args[-len(defaults):], defaults) if getattr(self, "_" + a) != d])
@@ -228,10 +228,37 @@ class TimeLimitResponseModificator(ResponseModificator):
     def __init__(self, limits=None):
         super().__init__()
         self._limits = limits
+        self._name = "Discrete"
 
     def modify(self, data):
         for limit, value in self._limits:
             data.loc[(data["response_time"] > limit) & (data["correct"] > 0), "correct"] = value
+        return data
+
+
+class ExpDrop(ResponseModificator):
+    def __init__(self, expected_time=None, slope=None):
+        super().__init__()
+        self._expected_time = expected_time
+        self._slope = slope
+        self._name = "Exp"
+
+    def modify(self, data):
+        data.loc[(data["response_time"] > self._expected_time) & (data["correct"] > 0), "correct"] = \
+            self._slope ** ((data["response_time"] / self._expected_time) - 1)
+        return data
+
+
+class LinearDrop(ResponseModificator):
+    def __init__(self, max=None):
+        super().__init__()
+        self._max = max
+        self._name = "linear"
+
+    def modify(self, data):
+        data["correct2"] = data["correct"]
+        data.loc[(data["response_time"] > self._max) & (data["correct"] > 0), "correct"] = 0
+        data.loc[data["correct"] > 0, "correct"] = (self._max - data["response_time"]) / float(self._max)
         return data
 
 
