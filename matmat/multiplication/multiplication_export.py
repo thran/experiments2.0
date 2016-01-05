@@ -37,7 +37,7 @@ def grid(data, model):
 
 items = data.get_items_df()
 items = items[(items["skill_lvl_2"] == 210) & ~items["skill_lvl_3"].isnull()].loc[:, ("question", "answer", "visualization")]
-# items = items[items["visualization"] == "free_answer"]
+items = items[items["visualization"] == "free_answer"]
 
 answers[answers["item"].isin(items.index)].to_pickle("../data/matmat/2016-01-04/answers-multiplication.pd")
 data_multiplication = Data("../data/matmat/2016-01-04/answers-multiplication.pd")
@@ -45,7 +45,7 @@ model = EloPriorCurrentModel(alpha=1.4, beta=0.1, KC=3, KI=0.5)
 
 items = items.join(pd.Series(answers.groupby("item").size(), name="answer_count"))
 items = items.join(pd.Series(answers.groupby("item").apply(lambda i: i["correct"].sum() / len(i)), name="success_rate"))
-items = items.join(pd.Series(answers.groupby("item")["response_time"].mean(), name="response_time"))
+items = items.join(pd.Series(answers.groupby("item")["response_time"].median(), name="response_time"))
 
 Evaluator(data_multiplication, model).get_report(force_run=True)
 items["model_difficulty"] = model.get_difficulties(items.index)
@@ -80,14 +80,14 @@ plt.subplot(223)
 plt.title("Answer count")
 sns.heatmap(dfAC, annot=True, fmt=".0f")
 plt.subplot(224)
-plt.title("Response time")
+plt.title("Median od response times")
 sns.heatmap(dfRT, annot=True, fmt=".1f")
 # plt.show()
-# plt.savefig("multiplication - all.png")
+plt.savefig("multiplication - free_answer.png")
 
 
 print(skills)
-skills.to_csv("multiplication.csv")
+skills[["answer_count", "success_rate", "model_difficulty", "response_time"]].to_csv("multiplication.csv")
 # print(items[items["question"] == "7x"])
 
 plt.figure()
