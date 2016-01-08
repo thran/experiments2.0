@@ -37,7 +37,7 @@ def compare_models(data1, data2, model1, model2, plot=True):
     difficulties = pd.DataFrame(columns=["model1", "model2"], index=items)
     difficulties["model1"] = model1.get_difficulties(items)
     difficulties["model2"] = model2.get_difficulties(items)
-    difficulties_corr = difficulties.corr().loc["model1", "model2"]
+    difficulties_corr = difficulties.corr(method="spearman").loc["model1", "model2"]
     if plot:
         plt.subplot(221)
         plt.plot(difficulties["model1"], difficulties["model2"], "k.")
@@ -50,7 +50,7 @@ def compare_models(data1, data2, model1, model2, plot=True):
     skills = pd.DataFrame(index=students, columns=["model1", "model2"])
     skills["model1"] = model1.get_skills(students)
     skills["model2"] = model2.get_skills(students)
-    skills_corr = skills.corr().loc["model1", "model2"]
+    skills_corr = skills.corr(method="spearman").loc["model1", "model2"]
     if plot:
         plt.subplot(222)
         plt.plot(skills["model1"], skills["model2"], "k.")
@@ -62,7 +62,7 @@ def compare_models(data1, data2, model1, model2, plot=True):
     predictions = pd.DataFrame(index=students, columns=["model1", "model2"])
     predictions["model1"] = pd.Series(runner1._log)
     predictions["model2"] = pd.Series(runner2._log)
-    predictions_corr = predictions.corr().loc["model1", "model2"]
+    predictions_corr = predictions.corr(method="spearman").loc["model1", "model2"]
     if plot:
         plt.subplot(223)
         plt.plot(predictions["model1"], predictions["model2"], "k.")
@@ -152,12 +152,12 @@ different_time_mods = {
     "lin 15": (lambda l: Data("../data/matmat/2015-12-16/answers.pd", response_modification=LinearDrop(15)), model_flat),
     "lin 20": (lambda l: Data("../data/matmat/2015-12-16/answers.pd", response_modification=LinearDrop(15)), model_flat),
 }
-compare_more_models(different_time_mods)
+# compare_more_models(different_time_mods)
 
 
 plt.show()
 
-if False:
+if True:
     plt.figure(figsize=(10, 10), dpi=100)
     compare_models(data, data, model_flat(None), model_hierarchical(None))
     # print(compare_models(data_time_2, data_time_2b, model_flat(None), model_flat(None)))

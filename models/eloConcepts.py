@@ -58,6 +58,8 @@ class EloConcepts(Model):
     def _get_concept(self, item):
         if self.concept_map is None:
             return 0
+        if item not in self.concept_map:
+            return "other"
         return self.concept_map[item]
 
     def _init_concept_map(self, concepts):

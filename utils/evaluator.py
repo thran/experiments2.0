@@ -65,7 +65,8 @@ class Evaluator:
         try:
             report["AUC"] = metrics.roc_auc_score(self._data.get_dataframe_test()["correct"], self._data.get_dataframe_test()["prediction"])
         except ValueError:
-            pass
+            print("AUC - converting responses to 0, 1")
+            report["AUC"] = metrics.roc_auc_score(self._data.get_dataframe_test()["correct"] > 0, self._data.get_dataframe_test()["prediction"])
 
         # brier
         brier_prediction_means = brier_prediction / brier_counts

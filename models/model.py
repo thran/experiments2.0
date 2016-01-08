@@ -77,7 +77,7 @@ class AvgModel(Model):
 class ItemAvgModel(Model):
     def __init__(self, init_avg=0.5):
         Model.__init__(self)
-        self.VERSION = 1
+        self.VERSION = 2
         self.name = "Item-average"
         self._init_avg = init_avg
 
@@ -93,8 +93,7 @@ class ItemAvgModel(Model):
 
     def update(self, student, item, prediction, correct, extra=None):
         self.counts[item] += 1
-        if correct:
-            self.corrects[item] += 1
+        self.corrects[item] += correct
 
     def post_process_data(self, data):
         self.difficulty = self.corrects / self.counts

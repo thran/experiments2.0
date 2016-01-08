@@ -24,7 +24,7 @@ compare_models(d, [
     # EloHierarchicalModel(alpha=0.25, beta=0.02),
     EloConcepts(),
     EloConcepts(concepts=concepts),
-], dont=0, force_evaluate=0, force_run=0, answer_filters={
+], dont=1, force_evaluate=0, force_run=0, answer_filters={
     # "long (50) student": data.filter_students_with_many_answers(),
     # "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
     # "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),
