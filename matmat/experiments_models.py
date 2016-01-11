@@ -8,7 +8,7 @@ import matplotlib.pylab as plt
 import seaborn as sns
 import numpy as np
 
-d = data.Data("../data/matmat/2015-11-20/answers.pd", only_first=True)
+d = data.Data("../data/matmat/2015-11-20/answers.pd", train_size=0.5, only_first=True)
 # d = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
 # d = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.66), (10, 0.33)]))
 concepts = d.get_concepts()
@@ -24,7 +24,7 @@ compare_models(d, [
     # EloHierarchicalModel(alpha=0.25, beta=0.02),
     EloConcepts(),
     EloConcepts(concepts=concepts),
-], dont=1, force_evaluate=0, force_run=0, answer_filters={
+], dont=0, force_evaluate=0, force_run=0, runs=3, answer_filters={
     # "long (50) student": data.filter_students_with_many_answers(),
     # "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
     # "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),

@@ -52,6 +52,9 @@ class Data():
         self._load_file()
         return self._data_test
 
+    def set_seed(self, seed):
+        self._train_seed = 42 + seed
+
     def _load_file(self):
         if self._data is not None:
             return
