@@ -1,6 +1,8 @@
 import inspect
 
 import math
+from collections import defaultdict
+
 import pandas as pd
 
 
@@ -82,11 +84,8 @@ class ItemAvgModel(Model):
         self._init_avg = init_avg
 
     def pre_process_data(self, data):
-        items = data.get_items()
-        self.corrects = pd.Series(index=items)
-        self.counts = pd.Series(index=items)
-        self.corrects[:] = 0
-        self.counts[:] = 0
+        self.corrects = defaultdict(lambda: 0)
+        self.counts = defaultdict(lambda: 0)
 
     def predict(self, student, item, extra=None):
         return self.corrects[item] / self.counts[item] if self.counts[item] > 0 else self._init_avg
@@ -96,4 +95,4 @@ class ItemAvgModel(Model):
         self.corrects[item] += correct
 
     def post_process_data(self, data):
-        self.difficulty = self.corrects / self.counts
+        self.difficulty = pd.Series(self.corrects) / pd.Series(self.counts)
