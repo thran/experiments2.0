@@ -31,7 +31,6 @@ cache = {}
 
 
 def compare_model_predictions(data1, data2, model1, model2, plot=True):
-    print(len(cache))
     if str(data1) + str(model1) not in cache:
         Evaluator(data1, model1).get_report()
         predictions1 = data1.get_dataframe_test()["prediction"]
@@ -63,15 +62,20 @@ def compare_model_predictions(data1, data2, model1, model2, plot=True):
     return predictions_corr
 
 
-def compare_more_models(experiments, eval_data, sort_labels=False):
+def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
     labels = sorted(experiments.keys())
 
     results = pd.DataFrame(index=labels, columns=labels, dtype=float)
     for label1 in labels:
         for label2 in labels:
-            c = compare_model_predictions(experiments[label1][0](label1), experiments[label2][0](label2),
-                                     experiments[label1][1](label1), experiments[label2][1](label2), plot=False)
-            results[label1][label2] = c
+            for run in range(runs):
+                data1 = experiments[label1][0](label1)
+                data2 = experiments[label2][0](label2)
+                data1.set_seed(run)
+                data2.set_seed(run)
+                c = compare_model_predictions(data1, data2,
+                                  experiments[label1][1](label1), experiments[label2][1](label2), plot=False)
+                results[label1][label2] = c
 
     df = pd.DataFrame(columns=["labels", "rmse"])
     for label in labels:
@@ -86,17 +90,17 @@ def compare_more_models(experiments, eval_data, sort_labels=False):
     plt.subplot(222)
     compare_models(eval_data, [experiments[label][1](label) for label in labels], answer_filters={
         "response >7s-0.5": transform_response_by_time(((7, 0.5),))
-    })
+    }, runs=runs)
     plt.subplot(223)
     compare_models([experiments[label][0](label) for label in labels],
                    [experiments[label][1](label) for label in labels],
                    names=labels,
-                   metric="rmse", force_evaluate=False)
+                   metric="rmse", force_evaluate=False, runs=runs)
     plt.subplot(224)
     compare_models([experiments[label][0](label) for label in labels],
                    [experiments[label][1](label) for label in labels],
                    names=labels,
-                   metric="AUC", force_evaluate=False)
+                   metric="AUC", force_evaluate=False, runs=runs)
 
 
 
@@ -140,7 +144,7 @@ models = {
     "Concepts many + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_many)),
 }
 
-compare_more_models(models, data(None))
+# compare_more_models(models, data(None), runs=10)
 
 
 
@@ -155,7 +159,7 @@ models_concepts = {
     "2Concepts many + T": (data_skip_time, lambda l: EloConcepts(concepts=concepts_many)),
 }
 
-# compare_more_models(models_concepts, data(None))
+# compare_more_models(models_concepts, data(None), runs=10)
 
 
 # print(data.get_dataframe_all()["response_time"].median())
