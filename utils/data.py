@@ -227,6 +227,16 @@ class ResponseModificator():
         return s
 
 
+class BinaryResponse(ResponseModificator):
+    def __init__(self, threshold=0):
+        super().__init__()
+        self._name = "Binary"
+        self._threshold = threshold
+
+    def modify(self, data):
+        data.loc[data["correct"] > self._threshold, "correct"] = 1
+        return data
+
 class TimeLimitResponseModificator(ResponseModificator):
     def __init__(self, limits=None):
         super().__init__()
@@ -269,10 +279,21 @@ def filter_students_with_many_answers(number_of_answers=50):
     return lambda data: data[data.join(pd.Series(data.groupby("student").apply(len), name="count"), on="student")["count"] >= number_of_answers]
 
 
-def transform_response_by_time(limits=None):
+def transform_response_by_time(limits=None, binarize_before=False):
     def fce(data):
         data = data.copy(True)
         m = TimeLimitResponseModificator(limits)
+        if binarize_before:
+            data = response_as_binary()(data)
+        return m.modify(data)
+
+    return fce
+
+
+def response_as_binary():
+    def fce(data):
+        data = data.copy(True)
+        m = BinaryResponse()
         return m.modify(data)
 
     return fce

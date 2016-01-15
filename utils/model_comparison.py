@@ -8,7 +8,7 @@ import math
 
 
 def compare_models(data, models, names=None, dont=False, answer_filters=None, metric="rmse",evaluate=False,
-                   diff_to=None, force_evaluate=False, force_run=False, runs=1):
+                   diff_to=None, force_evaluate=False, force_run=False, runs=1, hue_order=True):
     if dont:
         return
     if answer_filters is None:
@@ -22,7 +22,7 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                 m = copy.deepcopy(model)
                 d.set_seed(run)
             else:
-                d = data
+                d = dat
                 m = model
             report = Evaluator(d, m).get_report(
                 force_evaluate=force_evaluate,
@@ -55,7 +55,9 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
         plt.title(data)
     print(df)
 
+    hue_order = sorted(df["model"].unique(), key=lambda i: df[df["model"]==i][metric].mean()) if hue_order else None
+
     sns.barplot(x="data", y=metric, hue="model", data=df,
-                hue_order=sorted(df["model"].unique(), key=lambda i: df[df["model"]==i][metric].mean()),
+                hue_order=hue_order,
                 order=["all"] + sorted(list(answer_filters.keys())))
     plt.ylim((math.floor(100 * df[metric].min()) / 100, math.ceil(100 * df[metric].max()) / 100))

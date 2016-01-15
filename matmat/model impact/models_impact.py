@@ -3,7 +3,8 @@ from models.eloConcepts import EloConcepts
 from models.eloHierarchical import EloHierarchicalModel
 from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import AvgModel, ItemAvgModel
-from utils.data import Data, TimeLimitResponseModificator, ExpDrop, LinearDrop, transform_response_by_time
+from utils.data import Data, TimeLimitResponseModificator, ExpDrop, LinearDrop, transform_response_by_time, \
+    filter_students_with_many_answers, response_as_binary
 from utils.data import compute_corr
 import pandas as pd
 import numpy as np
@@ -66,8 +67,10 @@ def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
     labels = sorted(experiments.keys())
 
     results = pd.DataFrame(index=labels, columns=labels, dtype=float)
-    for label1 in labels:
-        for label2 in labels:
+    for label in labels: results[label][label] = 1
+    for i, label1 in enumerate(labels):
+        for label2 in labels[i+1:]:
+            print(label1, label2)
             for run in range(runs):
                 data1 = experiments[label1][0](label1)
                 data2 = experiments[label2][0](label2)
@@ -76,6 +79,7 @@ def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
                 c = compare_model_predictions(data1, data2,
                                   experiments[label1][1](label1), experiments[label2][1](label2), plot=False)
                 results[label1][label2] = c
+                results[label2][label1] = c
 
     df = pd.DataFrame(columns=["labels", "rmse"])
     for label in labels:
@@ -89,18 +93,22 @@ def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
     plt.xticks(rotation=90)
     plt.subplot(222)
     compare_models(eval_data, [experiments[label][1](label) for label in labels], answer_filters={
-        "response >7s-0.5": transform_response_by_time(((7, 0.5),))
-    }, runs=runs)
+            # "response >7s-0.5": transform_response_by_time(((7, 0.5),)),
+            "long (30) students": filter_students_with_many_answers(number_of_answers=30),
+        }, runs=runs, hue_order=False)
     plt.subplot(223)
     compare_models([experiments[label][0](label) for label in labels],
                    [experiments[label][1](label) for label in labels],
                    names=labels,
-                   metric="rmse", force_evaluate=False, runs=runs)
+                   metric="rmse", force_evaluate=False, answer_filters={
+            "binary": response_as_binary(),
+            "response >7s-0.5": transform_response_by_time(((7, 0.5),), binarize_before=True),
+        }, runs=runs, hue_order=False)
     plt.subplot(224)
     compare_models([experiments[label][0](label) for label in labels],
                    [experiments[label][1](label) for label in labels],
                    names=labels,
-                   metric="AUC", force_evaluate=False, runs=runs)
+                   metric="AUC", force_evaluate=False, runs=runs, hue_order=False)
 
 
 
@@ -129,22 +137,19 @@ models = {
     "Hierarchical": (data, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
     "Concepts 5": (data, lambda l: EloConcepts(concepts=concepts_5)),
     "Concepts 10": (data, lambda l: EloConcepts(concepts=concepts_10)),
-    "Concepts many": (data, lambda l: EloConcepts(concepts=concepts_many)),
     "Item avg. + T": (data_skip_time, lambda l: ItemAvgModel()),
     "Flat + T": (data_skip_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
     "Hierarchical + T": (data_skip_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
     "Concepts 5 + T": (data_skip_time, lambda l: EloConcepts(concepts=concepts_5)),
     "Concepts 10 + T": (data_skip_time, lambda l: EloConcepts(concepts=concepts_10)),
-    "Concepts many + T": (data_skip_time, lambda l: EloConcepts(concepts=concepts_many)),
     "Item avg. + expT": (data_exp_time, lambda l: ItemAvgModel()),
     "Flat + expT": (data_exp_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
     "Hierarchical + expT": (data_exp_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
     "Concepts 5 + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_5)),
     "Concepts 10 + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_10)),
-    "Concepts many + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_many)),
 }
 
-# compare_more_models(models, data(None), runs=10)
+compare_more_models(models, data(None), runs=10)
 
 
 
