@@ -23,16 +23,19 @@ class Runner():
         os.remove(self.get_log_filename())
         os.remove(self.get_report_filename())
 
-    def run(self, force=False, only_train=False):
+    def run(self, force=False, only_train=False, skip_pre_process=False):
         if not force and (os.path.exists(self.get_log_filename()) and os.path.exists(self.get_report_filename())):
             print("Report and log in cache - {} ".format(self._hash))
             return self._hash
 
-        start = datetime.datetime.now()
-        print("Pre-processing data...")
-        self._model.pre_process_data(self._data)
-        pre_processing_time = datetime.datetime.now() - start
-        print("  total runtime:", pre_processing_time)
+        if not skip_pre_process:
+            start = datetime.datetime.now()
+            print("Pre-processing data...")
+            self._model.pre_process_data(self._data)
+            pre_processing_time = datetime.datetime.now() - start
+            print("  total runtime:", pre_processing_time)
+        else:
+            pre_processing_time = None
 
         start = datetime.datetime.now()
         print("Processing data...")

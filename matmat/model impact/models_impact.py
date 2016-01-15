@@ -66,13 +66,13 @@ def compare_model_predictions(data1, data2, model1, model2, plot=True):
     return predictions_corr
 
 
-def difficulty_stability(datas, models, labels, points, runs=1):
+def difficulty_stability(datas, models, labels, points, comparable=True, runs=1, eval_data=None):
     df = pd.DataFrame(columns=["data size", "correlation", "models"])
     for i in range(points):
         ratio = (i + 1) / points
         print("Evaluation for {}% of data".format(ratio * 100))
 
-        difficulties = defaultdict(lambda: [])
+        values = defaultdict(lambda: [])
         for data, model, label in zip(datas, models, labels):
             for run in range(runs):
                 d = data(None)
@@ -84,16 +84,25 @@ def difficulty_stability(datas, models, labels, points, runs=1):
                 Runner(d, m).run(force=True, only_train=True)
 
                 items = d.get_items()
-                difficulties[label].append(pd.Series(m.get_difficulties(items), items))
+                if eval_data is None:
+                    values[label].append(pd.Series(m.get_difficulties(items), items))
+                else:
+                    r = Runner(eval_data, m)
+                    r.run(force=True, skip_pre_process=True)
+                    values[label].append(pd.Series(r._log))
 
         for i, (data1, model1, label1) in enumerate(zip(datas, models, labels)):
             for data2, model2, label2 in list(zip(datas, models, labels))[i:]:
                 print("Computing correlations for " + label1 + " -- " + label2)
-                for d1 in difficulties[label1]:
-                    for d2 in difficulties[label2]:
-                        if d1.sum() == d2.sum() and ratio != 1:
-                            continue
-                        df.loc[len(df)] = (ratio, d1.corr(d2), label1 + " -- " + label2)
+                if comparable and label1 != label2:
+                    for v1, v2 in zip(values[label1], values[label2]):
+                        df.loc[len(df)] = (ratio, v1.corr(v2), label1 + " -- " + label2)
+                else:
+                    for v1 in values[label1]:
+                        for v2 in values[label2]:
+                            if v1.sum() == v2.sum() and ratio != 1:
+                                continue
+                            df.loc[len(df)] = (ratio, v1.corr(v2), label1 + " -- " + label2)
 
     print(df)
     sns.factorplot(x="data size", y="correlation", hue="models", data=df)
@@ -153,6 +162,8 @@ model_flat = lambda label: EloPriorCurrentModel(KC=2, KI=0.5)
 model_hierarchical = lambda label: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)
 filename = "../../data/matmat/2016-01-04/answers.pd"
 data = lambda l: Data(filename, train_size=0.7)
+data_test = lambda l: Data(filename.replace(".pd", ".test.pd"))
+data_train = lambda l: Data(filename.replace(".pd", ".train.pd"))
 data_skip_time = lambda l: Data(filename, train_size=0.7, response_modification=TimeLimitResponseModificator([(7, 0.5)]))
 data_exp_time = lambda l: Data(filename, train_size=0.7, response_modification=ExpDrop(5, 0.9))
 concepts_5 = get_concepts(data(None), level=1)
@@ -205,7 +216,7 @@ models_concepts = {
 
 # print(data.get_dataframe_all()["response_time"].median())
 
-if False:
+if True:
     difficulty_stability(
         [data, data, data, data],
         [
@@ -215,13 +226,23 @@ if False:
             lambda l: EloConcepts(concepts=concepts_10)
         ],
         ["Flat", "Hierarchical", "Concepts 5", "Concepts 10"],
-        10, runs=10)
+        10, runs=2, comparable=False,
+            eval_data=data_test(None)
+    )
 
-if True:
+if False:
     difficulty_stability(
         [data, data_skip_time, data_exp_time],
         [model_flat, model_flat, model_flat,],
         ["Flat", "Flat + T", "Flat + expT"],
-        10, runs=10)
+        10, runs=2,
+            eval_data=data_test(None)
+    )
+
+
+if False:
+    data = Data(filename, train_size=0.7)
+    data.get_dataframe_train().to_pickle(filename.replace(".pd", ".train.pd"))
+    data.get_dataframe_test().to_pickle(filename.replace(".pd", ".test.pd"))
 
 plt.show()
