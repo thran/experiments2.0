@@ -23,7 +23,7 @@ class Runner():
         os.remove(self.get_log_filename())
         os.remove(self.get_report_filename())
 
-    def run(self, force=False):
+    def run(self, force=False, only_train=False):
         if not force and (os.path.exists(self.get_log_filename()) and os.path.exists(self.get_report_filename())):
             print("Report and log in cache - {} ".format(self._hash))
             return self._hash
@@ -36,7 +36,7 @@ class Runner():
 
         start = datetime.datetime.now()
         print("Processing data...")
-        self._model.process_data(self._data, self._pandas_logger)
+        self._model.process_data(self._data, self._pandas_logger, only_train=only_train)
         processing_time = datetime.datetime.now() - start
         print("  total runtime:", processing_time)
 

@@ -1,3 +1,6 @@
+import copy
+from collections import defaultdict
+
 from algorithms.spectralclustering import SpectralClusterer
 from models.eloConcepts import EloConcepts
 from models.eloHierarchical import EloHierarchicalModel
@@ -61,6 +64,39 @@ def compare_model_predictions(data1, data2, model1, model2, plot=True):
         plt.ylabel(str(model2))
 
     return predictions_corr
+
+
+def difficulty_stability(datas, models, labels, points, runs=1):
+    df = pd.DataFrame(columns=["data size", "correlation", "models"])
+    for i in range(points):
+        ratio = (i + 1) / points
+        print("Evaluation for {}% of data".format(ratio * 100))
+
+        difficulties = defaultdict(lambda: [])
+        for data, model, label in zip(datas, models, labels):
+            for run in range(runs):
+                d = data(None)
+                d.set_seed(run)
+                d.set_train_size(ratio)
+                d.filter_data(100, 0)
+                m = model(None)
+
+                Runner(d, m).run(force=True, only_train=True)
+
+                items = d.get_items()
+                difficulties[label].append(pd.Series(m.get_difficulties(items), items))
+
+        for i, (data1, model1, label1) in enumerate(zip(datas, models, labels)):
+            for data2, model2, label2 in list(zip(datas, models, labels))[i:]:
+                print("Computing correlations for " + label1 + " -- " + label2)
+                for d1 in difficulties[label1]:
+                    for d2 in difficulties[label2]:
+                        if d1.sum() == d2.sum() and ratio != 1:
+                            continue
+                        df.loc[len(df)] = (ratio, d1.corr(d2), label1 + " -- " + label2)
+
+    print(df)
+    sns.factorplot(x="data size", y="correlation", hue="models", data=df)
 
 
 def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
@@ -149,7 +185,7 @@ models = {
     "Concepts 10 + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_10)),
 }
 
-compare_more_models(models, data(None), runs=10)
+# compare_more_models(models, data(None), runs=10)
 
 
 
@@ -168,5 +204,24 @@ models_concepts = {
 
 
 # print(data.get_dataframe_all()["response_time"].median())
+
+if False:
+    difficulty_stability(
+        [data, data, data, data],
+        [
+            model_flat,
+            model_hierarchical,
+            lambda l: EloConcepts(concepts=concepts_5),
+            lambda l: EloConcepts(concepts=concepts_10)
+        ],
+        ["Flat", "Hierarchical", "Concepts 5", "Concepts 10"],
+        10, runs=10)
+
+if True:
+    difficulty_stability(
+        [data, data_skip_time, data_exp_time],
+        [model_flat, model_flat, model_flat,],
+        ["Flat", "Flat + T", "Flat + expT"],
+        10, runs=10)
 
 plt.show()

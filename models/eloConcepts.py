@@ -69,3 +69,6 @@ class EloConcepts(Model):
         self.concept_map = {}
         for concept, items in concepts.items():
             self.concept_map.update({item: concept for item in items})
+
+    def get_difficulties(self, items):
+        return [self.difficulty[i] for i in items]

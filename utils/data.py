@@ -55,6 +55,9 @@ class Data():
     def set_seed(self, seed):
         self._train_seed = 42 + seed
 
+    def set_train_size(self, train_size):
+        self._train_size = train_size
+
     def _load_file(self):
         if self._data is not None:
             return

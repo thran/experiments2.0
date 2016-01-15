@@ -30,19 +30,20 @@ class Model:
     def post_process_data(self, data):
         pass
 
-    def process_data(self, data, logger=None):
+    def process_data(self, data, logger=None, only_train=False):
         print("Processing {} on {}".format(self, data))
         print("  training")
         for answer in data.iter_train():
             prediction = self.predict(answer["student"], answer["item"], answer)
             self.update(answer["student"], answer["item"], prediction, answer["correct"], answer)
 
-        print("  testing")
-        for answer in data.iter_test():
-            prediction = self.predict(answer["student"], answer["item"], answer)
-            self.update(answer["student"], answer["item"], prediction, answer["correct"], answer)
-            if logger is not None:
-                logger(answer, prediction)
+        if not only_train:
+            print("  testing")
+            for answer in data.iter_test():
+                prediction = self.predict(answer["student"], answer["item"], answer)
+                self.update(answer["student"], answer["item"], prediction, answer["correct"], answer)
+                if logger is not None:
+                    logger(answer, prediction)
 
         self.post_process_data(data)
 
