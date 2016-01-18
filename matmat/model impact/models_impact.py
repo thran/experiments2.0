@@ -108,6 +108,73 @@ def difficulty_stability(datas, models, labels, points, comparable=True, runs=1,
     sns.factorplot(x="data size", y="correlation", hue="models", data=df)
 
 
+def difficulty_stability2(datas, models, labels, points, runs=1, eval_data=None):
+    filename = "../../data/matmat/2016-01-04/tmp.data.pd"
+    df = pd.DataFrame(columns=["students", "correlation", "models"])
+    student_count = len(datas[0](None).get_students())
+    for i in range(points):
+        ratio = (i + 1) / points
+        print("Evaluation for {}% of data".format(ratio * 100))
+
+        for data, model, label in zip(datas, models, labels):
+            for run in range(runs):
+                d = data(None)
+                d.set_seed(run)
+                d.set_train_size(ratio)
+                d.filter_data(100, 0)
+                d.get_dataframe_train().to_pickle(filename)
+                m1 = model(None)
+                m2 = model(None)
+                d1 = Data(filename, train_size=0.5, train_seed=run + 42)
+                d2 = Data(filename, train_size=0.5, train_seed=-run - 42)
+
+                Runner(d1, m1).run(force=True, only_train=True)
+                Runner(d2, m2).run(force=True, only_train=True)
+
+                items = d.get_items()
+                if eval_data is None:
+                    v1 = pd.Series(m1.get_difficulties(items), items)
+                    v2 = pd.Series(m2.get_difficulties(items), items)
+                else:
+                    r1 = Runner(eval_data(None), m1)
+                    r2 = Runner(eval_data(None), m2)
+                    r1.run(force=True, skip_pre_process=True)
+                    r2.run(force=True, skip_pre_process=True)
+                    v1 = pd.Series(r1._log)
+                    v2 = pd.Series(r2._log)
+                df.loc[len(df)] = (ratio * student_count, v1.corr(v2), label)
+
+    print(df)
+    sns.factorplot(x="students", y="correlation", hue="models", data=df)
+
+
+def prediction_quality(datas, models, labels, points, runs=1):
+    filename = "../../data/matmat/2016-01-04/tmp2.data.pd"
+    df = pd.DataFrame(columns=["~answers", "rmse", "models"])
+    data_size = len(datas[0](None).get_dataframe_all())
+    for i in range(points):
+        ratio = (i + 1) / points
+        print("Evaluation for {}% of data".format(ratio * 100))
+
+        for data, model, label in zip(datas, models, labels):
+            for run in range(runs):
+                d = data(None)
+                d.set_seed(run)
+                d.set_train_size(ratio)
+                d.filter_data(100, 0)
+                d.get_dataframe_train().to_pickle(filename)
+
+                d = Data(filename)
+                m = model(None)
+
+                Runner(d, m).run(force=True, only_train=True)
+                report = Evaluator(d, m).get_report(force_evaluate=True, force_run=True)
+                df.loc[len(df)] = (ratio * data_size, report["rmse"], label)
+
+    print(df)
+    sns.factorplot(x="~answers", y="rmse", hue="models", data=df)
+
+
 def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
     labels = sorted(experiments.keys())
 
@@ -216,27 +283,37 @@ models_concepts = {
 
 # print(data.get_dataframe_all()["response_time"].median())
 
-if True:
-    difficulty_stability(
-        [data, data, data, data],
+if False:
+    prediction_quality(
+    # difficulty_stability2(
+        [data_train, data_train, data_train, data_train, data_train],
+        # [data, data, data, data, data],
         [
+            lambda l: ItemAvgModel(),
             model_flat,
             model_hierarchical,
             lambda l: EloConcepts(concepts=concepts_5),
             lambda l: EloConcepts(concepts=concepts_10)
         ],
-        ["Flat", "Hierarchical", "Concepts 5", "Concepts 10"],
-        10, runs=2, comparable=False,
-            eval_data=data_test(None)
+        ["Item Avg", "Flat", "Hierarchical", "Concepts 5", "Concepts 10"],
+        10, runs=10,
+        # eval_data=data_test
     )
 
-if False:
-    difficulty_stability(
-        [data, data_skip_time, data_exp_time],
+
+if True:
+    # prediction_quality(
+    difficulty_stability2(
+        [
+            data_train,
+            lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=TimeLimitResponseModificator([(7, 0.5)])),
+            lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=ExpDrop(5, 0.9))
+        ],
+        # [data, data_skip_time, data_exp_time],
         [model_flat, model_flat, model_flat,],
         ["Flat", "Flat + T", "Flat + expT"],
-        10, runs=2,
-            eval_data=data_test(None)
+        10, runs=10,
+        eval_data=data_test
     )
 
 

@@ -81,9 +81,12 @@ class Data():
 
         if self._train_size is not None:
             if self._train_seed is not None:
-                random.seed(self._train_seed)
+                seed = self._train_seed * (-1 if self._train_seed < 0 else 1)
+                random.seed(seed)
                 students = self.get_students()
                 selected_students = random.sample(students, int(len(students) * self._train_size))
+                if self._train_seed < 0:
+                    selected_students = list(set(students) - set(selected_students))
             else:
                 selected_students = json.load(open(os.path.join(os.path.dirname(self._filename), "/train_students.json")))
             self._data_train = self._data[self._data["student"].isin(selected_students)]

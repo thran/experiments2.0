@@ -97,3 +97,6 @@ class ItemAvgModel(Model):
 
     def post_process_data(self, data):
         self.difficulty = pd.Series(self.corrects) / pd.Series(self.counts)
+
+    def get_difficulties(self, items):
+        return [-self.predict(None, i) for i in items]
