@@ -229,6 +229,7 @@ model_flat = lambda label: EloPriorCurrentModel(KC=2, KI=0.5)
 model_hierarchical = lambda label: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)
 filename = "../../data/matmat/2016-01-04/answers.pd"
 data = lambda l: Data(filename, train_size=0.7)
+data_less_items = lambda l: Data(filename.replace(".pd", ".less_items.pd"), train_size=0.7)
 data_test = lambda l: Data(filename.replace(".pd", ".test.pd"))
 data_train = lambda l: Data(filename.replace(".pd", ".train.pd"))
 data_skip_time = lambda l: Data(filename, train_size=0.7, response_modification=TimeLimitResponseModificator([(7, 0.5)]))
@@ -284,24 +285,42 @@ models_concepts = {
 # print(data.get_dataframe_all()["response_time"].median())
 
 if False:
-    prediction_quality(
-    # difficulty_stability2(
-        [data_train, data_train, data_train, data_train, data_train],
-        # [data, data, data, data, data],
+    # prediction_quality(
+    difficulty_stability2(
+        # [data_train, data_train, data_train, data_train, data_train],
+        [data, data, data_less_items, data, data, data],
         [
             lambda l: ItemAvgModel(),
+            model_flat,
             model_flat,
             model_hierarchical,
             lambda l: EloConcepts(concepts=concepts_5),
             lambda l: EloConcepts(concepts=concepts_10)
         ],
-        ["Item Avg", "Flat", "Hierarchical", "Concepts 5", "Concepts 10"],
-        10, runs=10,
+        ["Item Avg", "Flat", "Flat less items", "Hierarchical", "Concepts 5", "Concepts 10"],
+        10, runs=5,
         # eval_data=data_test
     )
 
-
 if True:
+    difficulty_stability2(
+    # prediction_quality(
+            [data, data, data, data, data, data, data],
+            # [data_train, data_train, data_train, data_train, data_train, data_train, data_train],
+            [
+                lambda l: EloPriorCurrentModel(),
+                lambda l: EloPriorCurrentModel(alpha=0.2),
+                lambda l: EloPriorCurrentModel(alpha=5),
+                lambda l: EloPriorCurrentModel(beta=0.5),
+                lambda l: EloPriorCurrentModel(beta=0.02),
+                lambda l: EloPriorCurrentModel(KC=8, KI=2),
+                lambda l: EloPriorCurrentModel(KC=2, KI=0.5)
+            ],
+            ["Default (alpha=1, beta=0.1, K=1,1)", "alpha=0.5", "alpha=2", "beta=0.5", "beta=0.02", "K=8,2", "Fitted (K=2,0.5)"],
+            10, runs=2,
+    )
+
+if False:
     # prediction_quality(
     difficulty_stability2(
         [
@@ -321,5 +340,12 @@ if False:
     data = Data(filename, train_size=0.7)
     data.get_dataframe_train().to_pickle(filename.replace(".pd", ".train.pd"))
     data.get_dataframe_test().to_pickle(filename.replace(".pd", ".test.pd"))
+
+if False:
+    d = data(None)
+    df = d.get_dataframe_all()
+    items = d.get_items_df()
+
+    df.to_pickle(filename.replace(".pd", ".less_items.pd"))
 
 plt.show()
