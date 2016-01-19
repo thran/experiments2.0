@@ -16,18 +16,20 @@ concepts = d.get_concepts()
 
 compare_models(d, [
     # AvgModel(),
-    ItemAvgModel(),
+    # ItemAvgModel(),
+    # SkipHandler(ItemAvgModel()),
     # EloPriorCurrentModel(),
-    EloPriorCurrentModel(KC=2, KI=0.5),
-    SkipHandler(EloPriorCurrentModel(KC=2, KI=0.5)),
+    # EloPriorCurrentModel(KC=2, KI=0.5),
+    # SkipHandler(EloPriorCurrentModel(KC=2, KI=0.5)),
     # EloHierarchicalModel(),
     # EloHierarchicalModel(KC=1, KI=0.75),
     EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02),
     SkipHandler(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
     # EloHierarchicalModel(alpha=0.25, beta=0.02),
     # EloConcepts(),
-    EloConcepts(concepts=concepts),
-], dont=0, force_evaluate=0, force_run=0, runs=1, answer_filters={
+    # EloConcepts(concepts=concepts),
+    # SkipHandler(EloConcepts(concepts=concepts)),
+], dont=0, force_evaluate=1, force_run=1, runs=3, answer_filters={
     # "long (50) student": data.filter_students_with_many_answers(),
     # "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
     # "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),
