@@ -72,3 +72,6 @@ class EloConcepts(Model):
 
     def get_difficulties(self, items):
         return [self.difficulty[i] for i in items]
+
+    def get_skills(self, students):
+        return [self.global_skill[s] for s in students]

@@ -1,7 +1,9 @@
 from algorithms.spectralclustering import SpectralClusterer
 from matmat.experiments_difficulties import difficulty_vs_time, get_difficulty
+from models.eloConcepts import EloConcepts
 from models.eloHierarchical import EloHierarchicalModel
 from models.eloPriorCurrent import EloPriorCurrentModel
+from models.skipHandler import SkipHandler
 from utils.data import Data, TimeLimitResponseModificator, ExpDrop, LinearDrop
 from utils.data import compute_corr
 import pandas as pd
@@ -32,6 +34,8 @@ def compare_models(data1, data2, model1, model2, plot=True):
     else:
         runner2, model2 = cache[str(data2) + str(model2)]
 
+    difficulties_corr, skills_corr, predictions_corr = 0, 0, 0
+
     # difficulties
     items = list(set(data1.get_items()) & set(data2.get_items()))
     difficulties = pd.DataFrame(columns=["model1", "model2"], index=items)
@@ -45,18 +49,21 @@ def compare_models(data1, data2, model1, model2, plot=True):
         plt.xlabel(str(model1))
         plt.ylabel(str(model2))
 
-    # skills
-    students = list(set(data1.get_students()) & set(data2.get_students()))
-    skills = pd.DataFrame(index=students, columns=["model1", "model2"])
-    skills["model1"] = model1.get_skills(students)
-    skills["model2"] = model2.get_skills(students)
-    skills_corr = skills.corr(method="spearman").loc["model1", "model2"]
-    if plot:
-        plt.subplot(222)
-        plt.plot(skills["model1"], skills["model2"], "k.")
-        plt.title("Skills: {}".format(skills_corr))
-        plt.xlabel(str(model1))
-        plt.ylabel(str(model2))
+    try:
+        # skills
+        students = list(set(data1.get_students()) & set(data2.get_students()))
+        skills = pd.DataFrame(index=students, columns=["model1", "model2"])
+        skills["model1"] = model1.get_skills(students)
+        skills["model2"] = model2.get_skills(students)
+        skills_corr = skills.corr(method="spearman").loc["model1", "model2"]
+        if plot:
+            plt.subplot(222)
+            plt.plot(skills["model1"], skills["model2"], "k.")
+            plt.title("Skills: {}".format(skills_corr))
+            plt.xlabel(str(model1))
+            plt.ylabel(str(model2))
+    except AttributeError:
+        pass
 
     # predictions
     predictions = pd.DataFrame(index=students, columns=["model1", "model2"])
@@ -154,11 +161,24 @@ different_time_mods = {
 }
 # compare_more_models(different_time_mods)
 
+with_nans = {
+    "flat": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "flat + nan": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: SkipHandler(EloPriorCurrentModel(KC=2, KI=0.5))),
+    "hierarchical": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    "hierarchical+ nan": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: SkipHandler(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02))),
+    "concepts": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: EloConcepts(concepts=data.get_concepts())),
+    "concepts + nan": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: SkipHandler(EloConcepts(concepts=data.get_concepts()))),
+}
+
+compare_more_models(with_nans)
 
 plt.show()
 
-if True:
+if False:
     plt.figure(figsize=(10, 10), dpi=100)
-    compare_models(data, data, model_flat(None), model_hierarchical(None))
+    # compare_models(data, data, model_flat(None), model_hierarchical(None))
+    # compare_models(data, data, EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), SkipHandler(EloConcepts(concepts=data.get_concepts())))
+    compare_models(data, data, EloConcepts(concepts=data.get_concepts()), SkipHandler(EloConcepts(concepts=data.get_concepts())))
+    # compare_models(data, data, EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), SkipHandler(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)))
     # print(compare_models(data_time_2, data_time_2b, model_flat(None), model_flat(None)))
     plt.show()

@@ -30,7 +30,7 @@ class SkipHandler(Model):
             if self.after_skip[last_skips] == 0:
                 skip_K = 0
             else:
-                skip_K = self.skip_after_skip[last_skips] / self.after_skip[last_skips]
+                skip_K = 1 - self.skip_after_skip[last_skips] / self.after_skip[last_skips]
 
         return skip_K * self._model.predict(student, item, extra)
 
@@ -46,4 +46,10 @@ class SkipHandler(Model):
             self.last_skips[student] = 0
 
         self._model.update(student, item, prediction, correct, extra)   # update only when answer is not nan
+
+    def get_difficulties(self, items):
+        return self._model.get_difficulties(items)
+
+    def get_skills(self, students):
+        return self._model.get_skills(students)
 

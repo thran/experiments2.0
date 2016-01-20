@@ -6,6 +6,7 @@ from models.eloConcepts import EloConcepts
 from models.eloHierarchical import EloHierarchicalModel
 from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import AvgModel, ItemAvgModel
+from models.skipHandler import SkipHandler
 from utils.data import Data, TimeLimitResponseModificator, ExpDrop, LinearDrop, transform_response_by_time, \
     filter_students_with_many_answers, response_as_binary
 from utils.data import compute_corr
@@ -281,6 +282,18 @@ models_concepts = {
 
 # compare_more_models(models_concepts, data(None), runs=10)
 
+concepts = data(None).get_concepts()
+with_nans = {
+    "flat": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "flat + nan": (data, lambda l: SkipHandler(EloPriorCurrentModel(KC=2, KI=0.5))),
+    "hierarchical": (data, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    "hierarchical+ nan": (data, lambda l: SkipHandler(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02))),
+    "concepts": (data, lambda l: EloConcepts(concepts=concepts)),
+    "concepts + nan": (data, lambda l: SkipHandler(EloConcepts(concepts=concepts))),
+}
+
+compare_more_models(with_nans, data(None), runs=10)
+
 
 # print(data.get_dataframe_all()["response_time"].median())
 
@@ -302,7 +315,7 @@ if False:
         # eval_data=data_test
     )
 
-if True:
+if False:
     difficulty_stability2(
     # prediction_quality(
             [data, data, data, data, data, data, data],
