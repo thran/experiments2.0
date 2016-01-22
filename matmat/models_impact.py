@@ -170,7 +170,7 @@ with_nans = {
     "concepts + nan": (lambda l: Data("../data/matmat/2015-12-16/answers.pd"), lambda l: SkipHandler(EloConcepts(concepts=data.get_concepts()))),
 }
 
-compare_more_models(with_nans)
+# compare_more_models(with_nans)
 
 plt.show()
 
@@ -178,7 +178,7 @@ if False:
     plt.figure(figsize=(10, 10), dpi=100)
     # compare_models(data, data, model_flat(None), model_hierarchical(None))
     # compare_models(data, data, EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), SkipHandler(EloConcepts(concepts=data.get_concepts())))
-    compare_models(data, data, EloConcepts(concepts=data.get_concepts()), SkipHandler(EloConcepts(concepts=data.get_concepts())))
+    # compare_models(data, data, EloConcepts(concepts=data.get_concepts()), SkipHandler(EloConcepts(concepts=data.get_concepts())))
     # compare_models(data, data, EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), SkipHandler(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)))
     # print(compare_models(data_time_2, data_time_2b, model_flat(None), model_flat(None)))
     plt.show()

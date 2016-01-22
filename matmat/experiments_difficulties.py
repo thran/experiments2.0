@@ -14,6 +14,7 @@ d = data.Data("../data/matmat/2015-11-20/answers.pd")
 concepts = d.get_concepts()
 # d_filtered = data.Data("../data/matmat/2015-11-20/answers.pd", filter=(10, 10))
 d2 = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
+d3 = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.LinearDrop(14))
 
 def plot_skill_values(data, values):
     colors = ["p", "b", "y", "k", "g", "r"]
@@ -50,10 +51,12 @@ def compare_models(d1, d2, m1, m2, filter_skills=None):
     plt.title(v1.corr(v2))
     for k, v in v1.items():
         if not np.isnan(v2[k]) and not np.isnan(v):
-            plt.plot(v, v2[k], ".")
+            plt.plot(v, v2[k], "bo")
             plt.text(v, v2[k], skills.loc[k, "name"])
-    plt.xlabel("{} - {}".format(m1, d1))
-    plt.ylabel("{} - {}".format(m2, d2))
+    # plt.xlabel("{} - {}".format(m1, d1))
+    # plt.ylabel("{} - {}".format(m2, d2))
+    plt.xlabel("Difficulty according to the Basic model")
+    plt.ylabel("Difficulty according to the Basic model + linerTime")
 
 
 def get_mean_skill(data, model):
@@ -86,17 +89,17 @@ if 0:
     plot_item_values(d, get_difficulty(d, m, normalize=True))
     # plot_skill_values(d, get_mean_skill(d, m))
 
-if 0:
-    compare_models(d, d2,
+if 1:
+    compare_models(d, d3,
+        EloPriorCurrentModel(KC=2, KI=0.5),
+        EloPriorCurrentModel(KC=2, KI=0.5),
         # EloPriorCurrentModel(KC=2, KI=0.5),
-        # EloPriorCurrentModel(KC=2, KI=0.5),
-        # EloPriorCurrentModel(KC=2, KI=0.5),
-        EloHierarchicalModel(alpha=0.25, beta=0.02, KC=3.5, KI=2.50),
-        EloHierarchicalModel(alpha=0.80, beta=0.02, KC=1.0, KI=0.75),
+        # EloHierarchicalModel(alpha=0.25, beta=0.02, KC=3.5, KI=2.50),
+        # EloHierarchicalModel(alpha=0.80, beta=0.02, KC=1.0, KI=0.75),
         # EloHierarchicalModel(alpha=0.25, beta=0.02),
         # EloConcepts(concepts=concepts),
         # ItemAvgModel(),
-    filter_skills=[2, 27, 210]) # all skills [2, 26, 151, 209, 367]
+    filter_skills=[27]) # all skills [2, 26, 151, 209, 367]
     # n1=True, n2=True)
 
 if 0:

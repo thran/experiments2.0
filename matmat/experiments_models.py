@@ -28,7 +28,7 @@ compare_models(d, [
     # EloConcepts(),
     EloConcepts(concepts=concepts),
     SkipHandler(EloConcepts(concepts=concepts)),
-], dont=0, force_evaluate=0, force_run=0, runs=20, answer_filters={
+], dont=0, force_evaluate=0, force_run=0, runs=20, hue_order=False, answer_filters={
     # "long (50) student": data.filter_students_with_many_answers(),
     # "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
     # "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),

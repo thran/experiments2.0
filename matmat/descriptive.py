@@ -79,8 +79,9 @@ def success_rate(data, per_student=True, per_item=True):
 
 data = Data("../data/matmat/2015-11-20/answers.pd")
 
-response_times(data, time_dist=True, mean_times_dist=False)
+# response_times(data, time_dist=True, mean_times_dist=False)
 # answer_count(data, per_student=False, per_item=True, student_drop_off=False)
 # success_rate(data, per_student=False)
+# print(data.get_items_df().count())
 
 plt.show()

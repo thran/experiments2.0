@@ -67,6 +67,35 @@ def compare_model_predictions(data1, data2, model1, model2, plot=True):
     return predictions_corr
 
 
+def compare_model_difficulties(data1, data2, model1, model2, plot=True):
+    if str(data1) + str(model1) not in cache:
+        runner1 = Runner(data1, model1)
+        runner1.run(force=True)
+        cache[str(data1) + str(model1)] = runner1, model1
+    else:
+        runner1, model1 = cache[str(data1) + str(model1)]
+
+    if str(data2) + str(model2) not in cache:
+        runner2 = Runner(data2, model2)
+        runner2.run(force=True)
+        cache[str(data2) + str(model2)] = runner2, model2
+    else:
+        runner2, model2 = cache[str(data2) + str(model2)]
+
+    items = list(set(data1.get_items()) & set(data2.get_items()))
+    difficulties = pd.DataFrame(columns=["model1", "model2"], index=items)
+    difficulties["model1"] = model1.get_difficulties(items)
+    difficulties["model2"] = model2.get_difficulties(items)
+    difficulties_corr = difficulties.corr(method="spearman").loc["model1", "model2"]
+    if plot:
+        plt.plot(difficulties["model1"], difficulties["model2"], "k.")
+        plt.title("Difficulties: {}".format(difficulties_corr))
+        plt.xlabel(str(model1))
+        plt.ylabel(str(model2))
+
+    return difficulties_corr
+
+
 def difficulty_stability(datas, models, labels, points, comparable=True, runs=1, eval_data=None):
     df = pd.DataFrame(columns=["data size", "correlation", "models"])
     for i in range(points):
@@ -110,9 +139,9 @@ def difficulty_stability(datas, models, labels, points, comparable=True, runs=1,
 
 
 def difficulty_stability2(datas, models, labels, points, runs=1, eval_data=None):
-    filename = "../../data/matmat/2016-01-04/tmp.data.pd"
-    df = pd.DataFrame(columns=["students", "correlation", "models"])
-    student_count = len(datas[0](None).get_students())
+    filename = "../../data/matmat/2016-01-04/tmp2.data.pd"
+    df = pd.DataFrame(columns=["answers", "correlation", "models"])
+    student_count = len(datas[0](None).get_dataframe_all())
     for i in range(points):
         ratio = (i + 1) / points
         print("Evaluation for {}% of data".format(ratio * 100))
@@ -146,7 +175,8 @@ def difficulty_stability2(datas, models, labels, points, runs=1, eval_data=None)
                 df.loc[len(df)] = (ratio * student_count, v1.corr(v2), label)
 
     print(df)
-    sns.factorplot(x="students", y="correlation", hue="models", data=df)
+    sns.factorplot(x="answers", y="correlation", hue="models", data=df, markers=["o", "^", "v", "s", "D"])
+    return df
 
 
 def prediction_quality(datas, models, labels, points, runs=1):
@@ -176,8 +206,8 @@ def prediction_quality(datas, models, labels, points, runs=1):
     sns.factorplot(x="~answers", y="rmse", hue="models", data=df)
 
 
-def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
-    labels = sorted(experiments.keys())
+def compare_more_models(experiments, eval_data, labels=False, difficulties=True, runs=1):
+    labels = sorted(experiments.keys()) if not labels else labels
 
     results = pd.DataFrame(index=labels, columns=labels, dtype=float)
     for label in labels: results[label][label] = 1
@@ -189,7 +219,8 @@ def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
                 data2 = experiments[label2][0](label2)
                 data1.set_seed(run)
                 data2.set_seed(run)
-                c = compare_model_predictions(data1, data2,
+                compare_fce = compare_model_difficulties if difficulties else compare_model_predictions
+                c = compare_fce(data1, data2,
                                   experiments[label1][1](label1), experiments[label2][1](label2), plot=False)
                 results[label1][label2] = c
                 results[label2][label1] = c
@@ -200,24 +231,28 @@ def compare_more_models(experiments, eval_data, sort_labels=False, runs=1):
         df.loc[len(df)] = (label, r["rmse"])
 
     plt.subplot(221)
-    plt.title("Correlations of predictions")
-    sns.heatmap(results)
-    plt.yticks(rotation=0)
-    plt.xticks(rotation=90)
-    plt.subplot(222)
-    compare_models(eval_data, [experiments[label][1](label) for label in labels], answer_filters={
-            # "response >7s-0.5": transform_response_by_time(((7, 0.5),)),
-            "long (30) students": filter_students_with_many_answers(number_of_answers=30),
-        }, runs=runs, hue_order=False)
-    plt.subplot(223)
-    compare_models([experiments[label][0](label) for label in labels],
-                   [experiments[label][1](label) for label in labels],
-                   names=labels,
-                   metric="rmse", force_evaluate=False, answer_filters={
-            "binary": response_as_binary(),
-            "response >7s-0.5": transform_response_by_time(((7, 0.5),), binarize_before=True),
-        }, runs=runs, hue_order=False)
+    # plt.subplot(121)
+    plt.title("Correlations of " + "difficulties" if difficulties else "predictions")
+    sns.heatmap(results, vmax=1, vmin=.4)
+    # plt.yticks(rotation=0)
+    # plt.xticks(rotation=90)
+    if True:
+        plt.subplot(222)
+        compare_models(eval_data, [experiments[label][1](label) for label in labels], answer_filters={
+                # "response >7s-0.5": transform_response_by_time(((7, 0.5),)),
+                "long (30) students": filter_students_with_many_answers(number_of_answers=30),
+            }, runs=runs, hue_order=False)
+        plt.subplot(223)
+        compare_models([experiments[label][0](label) for label in labels],
+                       [experiments[label][1](label) for label in labels],
+                       names=labels,
+                       metric="rmse", force_evaluate=False, answer_filters={
+                "binary": response_as_binary(),
+                "response >7s-0.5": transform_response_by_time(((7, 0.5),), binarize_before=True),
+            }, runs=runs, hue_order=False)
+
     plt.subplot(224)
+    # plt.subplot(122)
     compare_models([experiments[label][0](label) for label in labels],
                    [experiments[label][1](label) for label in labels],
                    names=labels,
@@ -234,6 +269,7 @@ data_less_items = lambda l: Data(filename.replace(".pd", ".less_items.pd"), trai
 data_test = lambda l: Data(filename.replace(".pd", ".test.pd"))
 data_train = lambda l: Data(filename.replace(".pd", ".train.pd"))
 data_skip_time = lambda l: Data(filename, train_size=0.7, response_modification=TimeLimitResponseModificator([(7, 0.5)]))
+data_linear = lambda l: Data(filename, train_size=0.7, response_modification=LinearDrop(14))
 data_exp_time = lambda l: Data(filename, train_size=0.7, response_modification=ExpDrop(5, 0.9))
 concepts_5 = get_concepts(data(None), level=1)
 concepts_10 = get_concepts(data(None), level=2)
@@ -248,26 +284,35 @@ if False:
     plt.show()
 
 models = {
-    "Item avg.": (data, lambda l: ItemAvgModel()),
-    "Flat": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "Item average": (data, lambda l: ItemAvgModel()),
+    "Basic": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
     "Hierarchical": (data, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
-    "Concepts 5": (data, lambda l: EloConcepts(concepts=concepts_5)),
-    "Concepts 10": (data, lambda l: EloConcepts(concepts=concepts_10)),
-    "Item avg. + T": (data_skip_time, lambda l: ItemAvgModel()),
-    "Flat + T": (data_skip_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
-    "Hierarchical + T": (data_skip_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
-    "Concepts 5 + T": (data_skip_time, lambda l: EloConcepts(concepts=concepts_5)),
-    "Concepts 10 + T": (data_skip_time, lambda l: EloConcepts(concepts=concepts_10)),
-    "Item avg. + expT": (data_exp_time, lambda l: ItemAvgModel()),
-    "Flat + expT": (data_exp_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
-    "Hierarchical + expT": (data_exp_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
-    "Concepts 5 + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_5)),
-    "Concepts 10 + expT": (data_exp_time, lambda l: EloConcepts(concepts=concepts_10)),
+    "Concept": (data, lambda l: EloConcepts(concepts=concepts_5)),
+
+    # "Item average + trasholdTime": (data_skip_time, lambda l: ItemAvgModel()),
+    # "Basic model + trasholdTime": (data_skip_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    # "Hierarchical model + trasholdTime": (data_skip_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    # "Concept model + trasholdTime": (data_skip_time, lambda l: EloConcepts(concepts=concepts_5)),
+
+    # "Item average + linearTime": (data_linear, lambda l: ItemAvgModel()),
+    # "Basic model + linearTime": (data_linear, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    # "Hierarchical model + linearTime": (data_linear, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    # "Concept model + linearTime": (data_linear, lambda l: EloConcepts(concepts=concepts_5)),
+    #
+    # "Item average + expTime": (data_exp_time, lambda l: ItemAvgModel()),
+    # "Basic model + expTime": (data_exp_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    # "Hierarchical model + expTime": (data_exp_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    # "Concept model + expTime": (data_exp_time, lambda l: EloConcepts(concepts=concepts_5)),
 }
+times = {
+    "noTime": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "expTime": (data_exp_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "trasholdTime": (data_skip_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "linearTime": (data_linear, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
 
-# compare_more_models(models, data(None), runs=10)
-
-
+}
+# compare_more_models(models, data(None), labels=["Item average", "Basic", "Hierarchical", "Concept"], runs=1)
+compare_more_models(times, data(None), labels=["noTime", "trasholdTime", "expTime", "linearTime"], runs=1)
 
 models_concepts = {
     "1Flat": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
@@ -292,32 +337,15 @@ with_nans = {
     "concepts + nan": (data, lambda l: SkipHandler(EloConcepts(concepts=concepts))),
 }
 
-compare_more_models(with_nans, data(None), runs=10)
+# compare_more_models(with_nans, data(None), runs=10)
 
 
 # print(data.get_dataframe_all()["response_time"].median())
 
-if False:
-    # prediction_quality(
-    difficulty_stability2(
-        # [data_train, data_train, data_train, data_train, data_train],
-        [data, data, data_less_items, data, data, data],
-        [
-            lambda l: ItemAvgModel(),
-            model_flat,
-            model_flat,
-            model_hierarchical,
-            lambda l: EloConcepts(concepts=concepts_5),
-            lambda l: EloConcepts(concepts=concepts_10)
-        ],
-        ["Item Avg", "Flat", "Flat less items", "Hierarchical", "Concepts 5", "Concepts 10"],
-        10, runs=5,
-        # eval_data=data_test
-    )
 
 if False:
     difficulty_stability2(
-    # prediction_quality(
+            # prediction_quality(
             [data, data, data, data, data, data, data],
             # [data_train, data_train, data_train, data_train, data_train, data_train, data_train],
             [
@@ -336,18 +364,53 @@ if False:
 if False:
     # prediction_quality(
     difficulty_stability2(
+            # [data_train, data_train, data_train, data_train, data_train],
+            [data, data, data, data, data],
+            [
+                lambda l: ItemAvgModel(),
+                model_flat,
+                # model_flat,
+                lambda l: EloConcepts(concepts=concepts_5),
+                model_hierarchical,
+                # lambda l: EloConcepts(concepts=concepts_10)
+            ],
+            ["Item Average", "Basic model", "Concept model", "Hierarchical model"],
+            10, runs=30,
+            # eval_data=data_test
+    ).to_pickle("Diff_models.pd")
+
+if False:
+    # prediction_quality(
+    difficulty_stability2(
         [
-            data_train,
-            lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=TimeLimitResponseModificator([(7, 0.5)])),
-            lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=ExpDrop(5, 0.9))
+            # data_train,
+            # lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=TimeLimitResponseModificator([(7, 0.5)])),
+            # lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=ExpDrop(5, 0.9)),
+            # lambda l: Data(filename.replace(".pd", ".train.pd"), response_modification=LinearDrop(14)),
+            data,
+            lambda l: Data(filename, response_modification=TimeLimitResponseModificator([(7, 0.5)])),
+            lambda l: Data(filename, response_modification=ExpDrop(5, 0.9)),
+            lambda l: Data(filename, response_modification=LinearDrop(14)),
         ],
         # [data, data_skip_time, data_exp_time],
-        [model_flat, model_flat, model_flat,],
-        ["Flat", "Flat + T", "Flat + expT"],
-        10, runs=10,
-        eval_data=data_test
-    )
+        # [model_flat, model_flat, model_flat, model_flat],
+        [model_hierarchical, model_hierarchical, model_hierarchical, model_hierarchical],
+        ["Basic model + noTime", "Basic model + thresholdTme", "Basic model + expTime", "Basic model + linearTime"],
+        10, runs=5,
+        # eval_data=data_test
+    ).to_pickle("Diff_times_H.pd")
 
+if False:
+    df = pd.read_pickle("Diff_times.pd")
+    # df = pd.read_pickle("Diff_models.pd")
+    df["answers"] = ((df["answers"] / 15000).round() * 15).astype(int)
+    print(df)
+    # g = sns.factorplot(x="answers", y="correlation", hue="models", hue_order=['Basic model', 'Item Average', 'Concept model', 'Hierarchical model'], data=df, markers=["o", "^", "v", "s", "D"])
+    g = sns.factorplot(x="answers", y="correlation", hue="models", data=df, markers=["o", "^", "v", "s", "D"])
+
+    g.set_xlabels("Thousands of answers in the train set")
+    g.set_ylabels("Correlation of parameters")
+    g.set(ylim=(0,1))
 
 if False:
     data = Data(filename, train_size=0.7)
