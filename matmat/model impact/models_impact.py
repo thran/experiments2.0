@@ -8,7 +8,7 @@ from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import AvgModel, ItemAvgModel
 from models.skipHandler import SkipHandler
 from utils.data import Data, TimeLimitResponseModificator, ExpDrop, LinearDrop, transform_response_by_time, \
-    filter_students_with_many_answers, response_as_binary
+    filter_students_with_many_answers, response_as_binary, transform_response_by_time_linear
 from utils.data import compute_corr
 import pandas as pd
 import numpy as np
@@ -206,8 +206,8 @@ def prediction_quality(datas, models, labels, points, runs=1):
     sns.factorplot(x="~answers", y="rmse", hue="models", data=df)
 
 
-def compare_more_models(experiments, eval_data, labels=False, difficulties=True, runs=1):
-    labels = sorted(experiments.keys()) if not labels else labels
+def compare_more_models(experiments, eval_data, labels=None, difficulties=True, runs=1):
+    labels = sorted(experiments.keys()) if labels is None else labels
 
     results = pd.DataFrame(index=labels, columns=labels, dtype=float)
     for label in labels: results[label][label] = 1
@@ -221,7 +221,7 @@ def compare_more_models(experiments, eval_data, labels=False, difficulties=True,
                 data2.set_seed(run)
                 compare_fce = compare_model_difficulties if difficulties else compare_model_predictions
                 c = compare_fce(data1, data2,
-                                  experiments[label1][1](label1), experiments[label2][1](label2), plot=False)
+                                experiments[label1][1](label1), experiments[label2][1](label2), plot=False)
                 results[label1][label2] = c
                 results[label2][label1] = c
 
@@ -231,33 +231,65 @@ def compare_more_models(experiments, eval_data, labels=False, difficulties=True,
         df.loc[len(df)] = (label, r["rmse"])
 
     plt.subplot(221)
-    # plt.subplot(121)
     plt.title("Correlations of " + "difficulties" if difficulties else "predictions")
     sns.heatmap(results, vmax=1, vmin=.4)
     # plt.yticks(rotation=0)
     # plt.xticks(rotation=90)
-    if True:
-        plt.subplot(222)
-        compare_models(eval_data, [experiments[label][1](label) for label in labels], answer_filters={
-                # "response >7s-0.5": transform_response_by_time(((7, 0.5),)),
-                "long (30) students": filter_students_with_many_answers(number_of_answers=30),
-            }, runs=runs, hue_order=False)
-        plt.subplot(223)
-        compare_models([experiments[label][0](label) for label in labels],
-                       [experiments[label][1](label) for label in labels],
-                       names=labels,
-                       metric="rmse", force_evaluate=False, answer_filters={
-                "binary": response_as_binary(),
-                "response >7s-0.5": transform_response_by_time(((7, 0.5),), binarize_before=True),
-            }, runs=runs, hue_order=False)
+    plt.subplot(222)
+    compare_models(eval_data, [experiments[label][1](label) for label in labels], answer_filters={
+        # "response >7s-0.5": transform_response_by_time(((7, 0.5),)),
+        "long (30) students": filter_students_with_many_answers(number_of_answers=30),
+    }, runs=runs, hue_order=False)
+    plt.subplot(223)
+    compare_models([experiments[label][0](label) for label in labels],
+                   [experiments[label][1](label) for label in labels],
+                   names=labels,
+                   metric="rmse", force_evaluate=False, answer_filters={
+            "binary": response_as_binary(),
+            "response >7s-0.5": transform_response_by_time(((7, 0.5),), binarize_before=True),
+        }, runs=runs, hue_order=False)
 
     plt.subplot(224)
-    # plt.subplot(122)
     compare_models([experiments[label][0](label) for label in labels],
                    [experiments[label][1](label) for label in labels],
                    names=labels,
                    metric="AUC", force_evaluate=False, runs=runs, hue_order=False)
 
+    return results
+
+def compare_more_models_final(experiments, eval_data, labels=None, difficulties=True, runs=1):
+    labels = sorted(experiments.keys()) if labels is None else labels
+
+    df = pd.DataFrame(columns=["labels", "rmse"])
+    for label in labels:
+        r = Evaluator(experiments[label][0](label), experiments[label][1](label)).get_report()
+        df.loc[len(df)] = (label, r["rmse"])
+
+    plt.subplot(131)
+    compare_models([experiments[label][0](label) for label in labels],
+                   [experiments[label][1](label) for label in labels],
+                   names=labels,
+                   palette=sns.color_palette()[:4],
+                   metric="rmse", force_evaluate=False, answer_filters={
+            "binary": response_as_binary(),
+        }, runs=runs, hue_order=False, with_all=False)
+
+    plt.subplot(132)
+    compare_models([experiments[label][0](label) for label in labels],
+                   [experiments[label][1](label) for label in labels],
+                   names=labels,
+                   palette=sns.color_palette()[:4],
+                   metric="rmse", force_evaluate=False, answer_filters={
+            # "response >7s-0.5": transform_response_by_time(((7, 0.5),), binarize_before=True),
+            "linear 14": transform_response_by_time_linear(14),
+        }, runs=runs, hue_order=False, with_all=False)
+
+    plt.subplot(133)
+    compare_models([experiments[label][0](label) for label in labels],
+                   [experiments[label][1](label) for label in labels],
+                   names=labels,
+                   palette=sns.color_palette()[:4],
+                   metric="AUC", force_evaluate=False, runs=runs, hue_order=False)
 
 
 
@@ -289,20 +321,20 @@ models = {
     "Hierarchical": (data, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
     "Concept": (data, lambda l: EloConcepts(concepts=concepts_5)),
 
-    # "Item average + trasholdTime": (data_skip_time, lambda l: ItemAvgModel()),
-    # "Basic model + trasholdTime": (data_skip_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
-    # "Hierarchical model + trasholdTime": (data_skip_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
-    # "Concept model + trasholdTime": (data_skip_time, lambda l: EloConcepts(concepts=concepts_5)),
+    "Item average + trasholdTime": (data_skip_time, lambda l: ItemAvgModel()),
+    "Basic model + trasholdTime": (data_skip_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "Hierarchical model + trasholdTime": (data_skip_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    "Concept model + trasholdTime": (data_skip_time, lambda l: EloConcepts(concepts=concepts_5)),
 
-    # "Item average + linearTime": (data_linear, lambda l: ItemAvgModel()),
-    # "Basic model + linearTime": (data_linear, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
-    # "Hierarchical model + linearTime": (data_linear, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
-    # "Concept model + linearTime": (data_linear, lambda l: EloConcepts(concepts=concepts_5)),
-    #
-    # "Item average + expTime": (data_exp_time, lambda l: ItemAvgModel()),
-    # "Basic model + expTime": (data_exp_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
-    # "Hierarchical model + expTime": (data_exp_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
-    # "Concept model + expTime": (data_exp_time, lambda l: EloConcepts(concepts=concepts_5)),
+    "Item average + linearTime": (data_linear, lambda l: ItemAvgModel()),
+    "Basic model + linearTime": (data_linear, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "Hierarchical model + linearTime": (data_linear, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    "Concept model + linearTime": (data_linear, lambda l: EloConcepts(concepts=concepts_5)),
+
+    "Item average + expTime": (data_exp_time, lambda l: ItemAvgModel()),
+    "Basic model + expTime": (data_exp_time, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
+    "Hierarchical model + expTime": (data_exp_time, lambda l: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
+    "Concept model + expTime": (data_exp_time, lambda l: EloConcepts(concepts=concepts_5)),
 }
 times = {
     "noTime": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
@@ -311,8 +343,40 @@ times = {
     "linearTime": (data_linear, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
 
 }
-# compare_more_models(models, data(None), labels=["Item average", "Basic", "Hierarchical", "Concept"], runs=1)
-compare_more_models(times, data(None), labels=["noTime", "trasholdTime", "expTime", "linearTime"], runs=1)
+l1 = [
+    "Item average",
+    "Item average + expTime",
+    "Item average + trasholdTime",
+    "Item average + linearTime",
+    "Basic",
+    "Basic model + expTime",
+    "Basic model + trasholdTime",
+    "Basic model + linearTime",
+    "Hierarchical",
+    "Hierarchical model + expTime",
+    "Hierarchical model + trasholdTime",
+    "Hierarchical model + linearTime",
+    "Concept",
+    "Concept model + expTime",
+    "Concept model + trasholdTime",
+    "Concept model + linearTime",
+]
+l2 = [
+    "Item average", "Basic", "Hierarchical", "Concept", "Item average + trasholdTime", "Basic model + trasholdTime", "Hierarchical model + trasholdTime", "Concept model + trasholdTime", "Item average + linearTime", "Basic model + linearTime", "Hierarchical model + linearTime", "Concept model + linearTime", "Item average + expTime", "Basic model + expTime", "Hierarchical model + expTime", "Concept model + expTime"
+]
+
+
+compare_more_models_final(models, data(None), runs=1, labels=l1)
+# compare_more_models(times, data(None), labels=["noTime", "trasholdTime", "expTime", "linearTime"], runs=1)
+if False:
+    df = pd.read_pickle("corr-all.pd")
+    df = df.loc[l1, l1]
+    sns.heatmap(df)
+    plt.yticks(rotation=0)
+    plt.xticks(rotation=90)
+    for i in range(1, 4):
+        plt.plot((0, 16), (i * 4, i * 4), color="white")
+        plt.plot((i * 4, i * 4), (0, 16), color="white")
 
 models_concepts = {
     "1Flat": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),

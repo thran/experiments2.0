@@ -296,6 +296,14 @@ def transform_response_by_time(limits=None, binarize_before=False):
     return fce
 
 
+def transform_response_by_time_linear(max=None):
+    def fce(data):
+        data = data.copy(True)
+        m = LinearDrop(max=max)
+        return m.modify(data)
+
+    return fce
+
 def response_as_binary():
     def fce(data):
         data = data.copy(True)

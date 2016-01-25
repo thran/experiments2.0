@@ -8,7 +8,7 @@ import math
 
 
 def compare_models(data, models, names=None, dont=False, answer_filters=None, metric="rmse",evaluate=False,
-                   diff_to=None, force_evaluate=False, force_run=False, runs=1, hue_order=True):
+                   diff_to=None, force_evaluate=False, force_run=False, runs=1, hue_order=True, with_all=True, **kwargs):
     if dont:
         return
     if answer_filters is None:
@@ -29,7 +29,7 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                 force_run=force_run,
                 answer_filters=answer_filters,
             )
-            for filter_name in ["all"] + list(answer_filters.keys()):
+            for filter_name in (["all"] if with_all else []) + list(answer_filters.keys()):
                 if filter_name == "all":
                     r = report
                 else:
@@ -59,5 +59,5 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
 
     sns.barplot(x="data", y=metric, hue="model", data=df,
                 hue_order=hue_order,
-                order=["all"] + sorted(list(answer_filters.keys())))
+                order=(["all"] if with_all else []) + sorted(list(answer_filters.keys())), **kwargs)
     plt.ylim((math.floor(100 * df[metric].min()) / 100, math.ceil(100 * df[metric].max()) / 100))

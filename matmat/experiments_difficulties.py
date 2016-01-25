@@ -1,5 +1,7 @@
 import random
 
+import re
+
 from models.eloConcepts import EloConcepts
 from utils import data, evaluator, utils, runner
 from models.eloPriorCurrent import EloPriorCurrentModel
@@ -51,8 +53,17 @@ def compare_models(d1, d2, m1, m2, filter_skills=None):
     plt.title(v1.corr(v2))
     for k, v in v1.items():
         if not np.isnan(v2[k]) and not np.isnan(v):
-            plt.plot(v, v2[k], "bo")
-            plt.text(v, v2[k], skills.loc[k, "name"])
+            g = re.match(r"(\d+)(\+|-)(\d+)", skills.loc[k, "name"])
+            if g is None:
+                continue
+            g = g.groups()
+            if g[1] == "+" and int(g[0]) + int(g[2]) > 9:
+                continue
+            if g[1] == "-" and g[0] == 10:
+                continue
+            color = "r" if g[1] == "-" and g[0] == g[2] else "b"
+            plt.plot(v, v2[k], color+"o")
+            plt.text(v + .01, v2[k] + .01, skills.loc[k, "name"])
     # plt.xlabel("{} - {}".format(m1, d1))
     # plt.ylabel("{} - {}".format(m2, d2))
     plt.xlabel("Difficulty according to the Basic model")
@@ -99,7 +110,7 @@ if 1:
         # EloHierarchicalModel(alpha=0.25, beta=0.02),
         # EloConcepts(concepts=concepts),
         # ItemAvgModel(),
-    filter_skills=[27]) # all skills [2, 26, 151, 209, 367]
+    filter_skills=[27, 152]) # all skills [2, 26, 151, 209, 367]
     # n1=True, n2=True)
 
 if 0:
