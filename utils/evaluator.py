@@ -96,6 +96,13 @@ class Evaluator:
         self._hash = self._runner.run(force=force_run)
         return self.evaluate(force_evaluate=force_evaluate or force_run, **kwargs)
 
+    def roc_curve(self):
+        self.get_report()
+        self._data.join_predictions(pd.read_pickle(self._runner.get_log_filename()))
+        fpr, tpr, thresholds = metrics.roc_curve(self._data.get_dataframe_test()["correct"] > 0, self._data.get_dataframe_test()["prediction"])
+        print(fpr, tpr, thresholds)
+        plt.plot(fpr, tpr, label=str(self._data))
+
     def _save_report(self, report):
         json.dump(report, open(self._runner.get_report_filename(), "w"), indent=4)
 

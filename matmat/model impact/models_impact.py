@@ -257,6 +257,7 @@ def compare_more_models(experiments, eval_data, labels=None, difficulties=True, 
 
     return results
 
+
 def compare_more_models_final(experiments, eval_data, labels=None, difficulties=True, runs=1):
     labels = sorted(experiments.keys()) if labels is None else labels
 
@@ -292,7 +293,6 @@ def compare_more_models_final(experiments, eval_data, labels=None, difficulties=
                    metric="AUC", force_evaluate=False, runs=runs, hue_order=False)
 
 
-
 model_flat = lambda label: EloPriorCurrentModel(KC=2, KI=0.5)
 model_hierarchical = lambda label: EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)
 filename = "../../data/matmat/2016-01-04/answers.pd"
@@ -306,8 +306,6 @@ data_exp_time = lambda l: Data(filename, train_size=0.7, response_modification=E
 concepts_5 = get_concepts(data(None), level=1)
 concepts_10 = get_concepts(data(None), level=2)
 concepts_many = get_concepts(data(None), level=3)
-
-
 
 if False:
     plt.figure(figsize=(10, 10), dpi=100)
@@ -352,22 +350,37 @@ l1 = [
     "Basic model + expTime",
     "Basic model + trasholdTime",
     "Basic model + linearTime",
-    "Hierarchical",
-    "Hierarchical model + expTime",
-    "Hierarchical model + trasholdTime",
-    "Hierarchical model + linearTime",
     "Concept",
     "Concept model + expTime",
     "Concept model + trasholdTime",
     "Concept model + linearTime",
+    "Hierarchical",
+    "Hierarchical model + expTime",
+    "Hierarchical model + trasholdTime",
+    "Hierarchical model + linearTime",
 ]
 l2 = [
     "Item average", "Basic", "Hierarchical", "Concept", "Item average + trasholdTime", "Basic model + trasholdTime", "Hierarchical model + trasholdTime", "Concept model + trasholdTime", "Item average + linearTime", "Basic model + linearTime", "Hierarchical model + linearTime", "Concept model + linearTime", "Item average + expTime", "Basic model + expTime", "Hierarchical model + expTime", "Concept model + expTime"
 ]
 
+if False:
+    model = lambda l: ItemAvgModel()
+    # model = model_flat
+    Evaluator(data(None), model(None)).roc_curve()
+    Evaluator(data_skip_time(None), model(None)).roc_curve()
+    Evaluator(data_linear(None), model(None)).roc_curve()
+    plt.title(str(model(None)))
+    plt.legend(loc=3)
 
-compare_more_models_final(models, data(None), runs=1, labels=l1)
-# compare_more_models(times, data(None), labels=["noTime", "trasholdTime", "expTime", "linearTime"], runs=1)
+if False:
+    # model = lambda l: ItemAvgModel()
+    model = model_flat
+    Evaluator(data(None), model(None)).brier_graphs()
+    Evaluator(data_skip_time(None), model(None)).brier_graphs()
+    Evaluator(data_linear(None), model(None)).brier_graphs()
+
+compare_more_models_final(models, data(None), runs=20, labels=l1)
+# compare_more_models(times, DATA(None), labels=["noTime", "trasholdTime", "expTime", "linearTime"], runs=1)
 if False:
     df = pd.read_pickle("corr-all.pd")
     df = df.loc[l1, l1]
