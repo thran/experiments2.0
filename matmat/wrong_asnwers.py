@@ -14,6 +14,7 @@ def filter_answers(data, skill):
     items = data.get_items_df()
     items = items[items["skill_lvl_" + str(level)] == pk]
     answers = data.get_dataframe_all()
+    last_in_session(answers)
     return pd.DataFrame(answers[answers["item"].isin(items.index)])
 
 
@@ -47,6 +48,7 @@ def next_item(answers):
     answers["next_correct"] = answers.groupby(["item", "student"])["correct"].shift(-1)
     answers["next_correct_global"] = answers.groupby(["student"])["correct"].shift(-1)
 
+
 def last_in_session(answers):
     answers["timestamp"] = pd.to_datetime(answers["timestamp"])
     answers["next_timestamp"] = answers.groupby("student")["timestamp"].shift(-1)
@@ -56,7 +58,6 @@ def last_in_session(answers):
 def get_stats(data, context, system="matmat"):
     answers = filter_answers(data, context)
     next_item(answers)
-    last_in_session(answers)
     df = pd.DataFrame(columns= ["system", "context", "classification", "statistics", "value"])
     answers = tag_answers(answers)
     for cl, value in (answers.groupby("class").apply(len) / len(answers)).items():
@@ -83,13 +84,15 @@ def get_stats(data, context, system="matmat"):
     plt.title("{} - {}".format(system, context))
     pivot = pivot.loc[["freq", "wfreq", "rtime", "successN", "successG", "leave", "repetition"], ["correct", "topcwa", "cwa", "missing", "other"]]
     sns.heatmap(pivot, annot=True, vmax=1)
+    plt.savefig("results/wrong answers/{}.png".format(context))
     return df
 
 
 data = Data("../data/matmat/2016-01-04/answers.pd")
-concepts = ["numbers <= 10", "numbers <= 20", "addition <= 10", "subtraction <= 10", "multiplication1"]
+# concepts = ["numbers <= 10", "numbers <= 20", "addition <= 10", "subtraction <= 10", "multiplication1"]
+concepts = ["numbers", "addition", "subtraction", "multiplication", "division"]
 results = pd.concat([get_stats(data, concept) for concept in concepts])
 
 print(results)
 results.to_csv("results/wrong answers/matmat.csv", sep=";", index=False)
-# plt.show()
+plt.show()
