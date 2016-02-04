@@ -1,4 +1,4 @@
 *.pd
 *.csv
 cache/*
-!matmat/results/**/*.csv
+!cross-system/**/*.csv

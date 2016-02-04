@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 
 from matplotlib.colors import ListedColormap
@@ -99,7 +100,7 @@ def get_stats(data, context, system="matmat"):
     plt.title("{} - {}".format(system, context))
     pivot = pivot.loc[["freq", "wfreq", "rtime", "successN", "successG", "leave", "repetition"], ["correct", "topcwa", "cwa", "missing", "other"]]
     sns.heatmap(pivot, annot=True, vmax=1)
-    plt.savefig("results/wrong answers/{}.png".format(context))
+    # plt.savefig("results/wrong answers/{}.png".format(context))
     return df
 
 
@@ -140,7 +141,7 @@ if False:
     results = pd.concat([get_stats(data, concept) for concept in concepts])
 
     print(results)
-    results.to_csv("results/wrong answers/matmat.csv", sep=";", index=False)
+    results.to_csv("results/matmat.csv", sep=";", index=False)
     plt.show()
 
 if False:
@@ -150,8 +151,8 @@ if False:
     results = pd.concat([get_stats(data, concept, system="slepemapy") for concept in concepts])
 
     print(results)
-    results.to_csv("results/wrong answers/slepemapy.csv", sep=";", index=False)
+    results.to_csv("results/slepemapy.csv", sep=";", index=False)
     plt.show()
 
-# radek_plot("results/wrong answers/{}.csv".format("matmat"))
-radek_plot("results/wrong answers/{}.csv".format("slepemapy"))
+# radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("matmat"))
+radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("slepemapy"))
