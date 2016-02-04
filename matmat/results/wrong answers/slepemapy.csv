@@ -1,0 +1,176 @@
+system;context;classification;statistics;value
+slepemapy;Czech Rep.-river;correct;freq;0.7801794105083297
+slepemapy;Czech Rep.-river;cwa;freq;0.07270397266125588
+slepemapy;Czech Rep.-river;missing;freq;0.032829583107242225
+slepemapy;Czech Rep.-river;other;freq;0.0556149485666786
+slepemapy;Czech Rep.-river;topcwa;freq;0.05867208515649353
+slepemapy;Czech Rep.-river;correct;wfreq;0.0
+slepemapy;Czech Rep.-river;cwa;wfreq;0.3307423241352507
+slepemapy;Czech Rep.-river;missing;wfreq;0.1493471707229966
+slepemapy;Czech Rep.-river;other;wfreq;0.2530015441014275
+slepemapy;Czech Rep.-river;topcwa;wfreq;0.2669089610403252
+slepemapy;Czech Rep.-river;correct;rtime;5.289
+slepemapy;Czech Rep.-river;cwa;rtime;7.787
+slepemapy;Czech Rep.-river;missing;rtime;5.082
+slepemapy;Czech Rep.-river;other;rtime;7.945
+slepemapy;Czech Rep.-river;topcwa;rtime;7.1775
+slepemapy;Czech Rep.-river;correct;successN;0.872130510778792
+slepemapy;Czech Rep.-river;cwa;successN;0.6328994529334088
+slepemapy;Czech Rep.-river;missing;successN;0.5759382672746405
+slepemapy;Czech Rep.-river;other;successN;0.5534806910569106
+slepemapy;Czech Rep.-river;topcwa;successN;0.6905003953462103
+slepemapy;Czech Rep.-river;correct;successG;0.8466737211692686
+slepemapy;Czech Rep.-river;cwa;successG;0.6170919373931343
+slepemapy;Czech Rep.-river;missing;successG;0.3808856088560886
+slepemapy;Czech Rep.-river;other;successG;0.5370050146982535
+slepemapy;Czech Rep.-river;topcwa;successG;0.676936834403707
+slepemapy;Czech Rep.-river;correct;leave;0.017970664488404304
+slepemapy;Czech Rep.-river;cwa;leave;0.023692317464350368
+slepemapy;Czech Rep.-river;missing;leave;0.034885356590237726
+slepemapy;Czech Rep.-river;other;leave;0.028190650170223368
+slepemapy;Czech Rep.-river;topcwa;leave;0.021920503738685558
+slepemapy;Czech Rep.-river;correct;repetition;0.872130510778792
+slepemapy;Czech Rep.-river;cwa;repetition;0.06253537068477645
+slepemapy;Czech Rep.-river;missing;repetition;0.1787676838536186
+slepemapy;Czech Rep.-river;other;repetition;0.02699441056910569
+slepemapy;Czech Rep.-river;topcwa;repetition;0.1380887834632328
+slepemapy;Czech Rep.-mountains;correct;freq;0.7586980055411827
+slepemapy;Czech Rep.-mountains;cwa;freq;0.09540742371699602
+slepemapy;Czech Rep.-mountains;missing;freq;0.02907102621970239
+slepemapy;Czech Rep.-mountains;other;freq;0.0568246454193501
+slepemapy;Czech Rep.-mountains;topcwa;freq;0.05999889910276875
+slepemapy;Czech Rep.-mountains;correct;wfreq;0.0
+slepemapy;Czech Rep.-mountains;cwa;wfreq;0.39538597238274836
+slepemapy;Czech Rep.-mountains;missing;wfreq;0.12047569803516028
+slepemapy;Czech Rep.-mountains;other;wfreq;0.23549181823711904
+slepemapy;Czech Rep.-mountains;topcwa;wfreq;0.24864651134497232
+slepemapy;Czech Rep.-mountains;correct;rtime;4.565
+slepemapy;Czech Rep.-mountains;cwa;rtime;6.463
+slepemapy;Czech Rep.-mountains;missing;rtime;3.9345
+slepemapy;Czech Rep.-mountains;other;rtime;6.55
+slepemapy;Czech Rep.-mountains;topcwa;rtime;5.834
+slepemapy;Czech Rep.-mountains;correct;successN;0.8481235703489359
+slepemapy;Czech Rep.-mountains;cwa;successN;0.616496413823082
+slepemapy;Czech Rep.-mountains;missing;successN;0.549175667993178
+slepemapy;Czech Rep.-mountains;other;successN;0.5516655657261489
+slepemapy;Czech Rep.-mountains;topcwa;successN;0.6678553234844625
+slepemapy;Czech Rep.-mountains;correct;successG;0.8204148983997905
+slepemapy;Czech Rep.-mountains;cwa;successG;0.6302126484396575
+slepemapy;Czech Rep.-mountains;missing;successG;0.3653045288912025
+slepemapy;Czech Rep.-mountains;other;successG;0.5375614944821168
+slepemapy;Czech Rep.-mountains;topcwa;successG;0.676593880998561
+slepemapy;Czech Rep.-mountains;correct;leave;0.01664336949634581
+slepemapy;Czech Rep.-mountains;cwa;leave;0.019923843224739415
+slepemapy;Czech Rep.-mountains;missing;leave;0.02474122696288816
+slepemapy;Czech Rep.-mountains;other;leave;0.025573135292218274
+slepemapy;Czech Rep.-mountains;topcwa;leave;0.020672782874617737
+slepemapy;Czech Rep.-mountains;correct;repetition;0.8481235703489359
+slepemapy;Czech Rep.-mountains;cwa;repetition;0.07204955444468594
+slepemapy;Czech Rep.-mountains;missing;repetition;0.19044911881750995
+slepemapy;Czech Rep.-mountains;other;repetition;0.027649334717372843
+slepemapy;Czech Rep.-mountains;topcwa;repetition;0.13338427576838172
+slepemapy;Europe-state;correct;freq;0.7902908943775342
+slepemapy;Europe-state;cwa;freq;0.0765640200070593
+slepemapy;Europe-state;missing;freq;0.017851393348771942
+slepemapy;Europe-state;other;freq;0.05900360712471698
+slepemapy;Europe-state;topcwa;freq;0.056290085141917544
+slepemapy;Europe-state;correct;wfreq;0.0
+slepemapy;Europe-state;cwa;wfreq;0.3650963070001149
+slepemapy;Europe-state;missing;wfreq;0.08512455048522964
+slepemapy;Europe-state;other;wfreq;0.28135929982429925
+slepemapy;Europe-state;topcwa;wfreq;0.2684198426903562
+slepemapy;Europe-state;correct;rtime;4.441
+slepemapy;Europe-state;cwa;rtime;6.297
+slepemapy;Europe-state;missing;rtime;4.159
+slepemapy;Europe-state;other;rtime;6.209
+slepemapy;Europe-state;topcwa;rtime;6.096
+slepemapy;Europe-state;correct;successN;0.8706389997496429
+slepemapy;Europe-state;cwa;successN;0.6450169643190038
+slepemapy;Europe-state;missing;successN;0.560774471136608
+slepemapy;Europe-state;other;successN;0.5532429816069699
+slepemapy;Europe-state;topcwa;successN;0.6883704198571355
+slepemapy;Europe-state;correct;successG;0.8478253595401098
+slepemapy;Europe-state;cwa;successG;0.643960837084126
+slepemapy;Europe-state;missing;successG;0.4014907332796132
+slepemapy;Europe-state;other;successG;0.521527735306709
+slepemapy;Europe-state;topcwa;successG;0.6750513509243167
+slepemapy;Europe-state;correct;leave;0.014085059379473068
+slepemapy;Europe-state;cwa;leave;0.020576594404965367
+slepemapy;Europe-state;missing;leave;0.03298611111111111
+slepemapy;Europe-state;other;leave;0.02941433949050162
+slepemapy;Europe-state;topcwa;leave;0.022023063041017955
+slepemapy;Europe-state;correct;repetition;0.8706389997496429
+slepemapy;Europe-state;cwa;repetition;0.07028075015845793
+slepemapy;Europe-state;missing;repetition;0.13947651487988527
+slepemapy;Europe-state;other;repetition;0.023771108959879533
+slepemapy;Europe-state;topcwa;repetition;0.12379875635952516
+slepemapy;Africa-state;correct;freq;0.7307821215253645
+slepemapy;Africa-state;cwa;freq;0.06642511651208162
+slepemapy;Africa-state;missing;freq;0.03181547167548078
+slepemapy;Africa-state;other;freq;0.1098688643732338
+slepemapy;Africa-state;topcwa;freq;0.06110842591383927
+slepemapy;Africa-state;correct;wfreq;0.0
+slepemapy;Africa-state;cwa;wfreq;0.2467336749269418
+slepemapy;Africa-state;missing;wfreq;0.11817741026615472
+slepemapy;Africa-state;other;wfreq;0.4081038933808594
+slepemapy;Africa-state;topcwa;wfreq;0.2269850214260441
+slepemapy;Africa-state;correct;rtime;4.296
+slepemapy;Africa-state;cwa;rtime;5.474
+slepemapy;Africa-state;missing;rtime;4.281499999999999
+slepemapy;Africa-state;other;rtime;5.737
+slepemapy;Africa-state;topcwa;rtime;5.281
+slepemapy;Africa-state;correct;successN;0.8430061802915367
+slepemapy;Africa-state;cwa;successN;0.6409349663619114
+slepemapy;Africa-state;missing;successN;0.5111947318908748
+slepemapy;Africa-state;other;successN;0.572683380838811
+slepemapy;Africa-state;topcwa;successN;0.6919220582671207
+slepemapy;Africa-state;correct;successG;0.7962830558276199
+slepemapy;Africa-state;cwa;successG;0.6150160614144934
+slepemapy;Africa-state;missing;successG;0.46082791652411903
+slepemapy;Africa-state;other;successG;0.5481621049847943
+slepemapy;Africa-state;topcwa;successG;0.6440377804014168
+slepemapy;Africa-state;correct;leave;0.011108536338093444
+slepemapy;Africa-state;cwa;leave;0.017420862545145528
+slepemapy;Africa-state;missing;leave;0.020847194499889112
+slepemapy;Africa-state;other;leave;0.018399588979513198
+slepemapy;Africa-state;topcwa;leave;0.01639628196986317
+slepemapy;Africa-state;correct;repetition;0.8430061802915367
+slepemapy;Africa-state;cwa;repetition;0.0629636018630326
+slepemapy;Africa-state;missing;repetition;0.22238946378174976
+slepemapy;Africa-state;other;repetition;0.02251177941946367
+slepemapy;Africa-state;topcwa;repetition;0.11653424139235717
+slepemapy;World-state;correct;freq;0.713394261424017
+slepemapy;World-state;cwa;freq;0.0761105207226355
+slepemapy;World-state;missing;freq;0.03494155154091392
+slepemapy;World-state;other;freq;0.10723485653560043
+slepemapy;World-state;topcwa;freq;0.06831880977683316
+slepemapy;World-state;correct;wfreq;0.0
+slepemapy;World-state;cwa;wfreq;0.26555825818699574
+slepemapy;World-state;missing;wfreq;0.12191504508780256
+slepemapy;World-state;other;wfreq;0.3741546037019459
+slepemapy;World-state;topcwa;wfreq;0.23837209302325582
+slepemapy;World-state;correct;rtime;5.132
+slepemapy;World-state;cwa;rtime;7.253
+slepemapy;World-state;missing;rtime;6.433999999999999
+slepemapy;World-state;other;rtime;7.068
+slepemapy;World-state;topcwa;rtime;6.766
+slepemapy;World-state;correct;successN;0.8322221665246379
+slepemapy;World-state;cwa;successN;0.6326567928323277
+slepemapy;World-state;missing;successN;0.5843045843045843
+slepemapy;World-state;other;successN;0.5509616840829926
+slepemapy;World-state;topcwa;successN;0.681404174573055
+slepemapy;World-state;correct;successG;0.784925125603629
+slepemapy;World-state;cwa;successG;0.5881499535747446
+slepemapy;World-state;missing;successG;0.5083120204603581
+slepemapy;World-state;other;successG;0.5271052960540022
+slepemapy;World-state;topcwa;successG;0.6244850669412977
+slepemapy;World-state;correct;leave;0.015384982064757547
+slepemapy;World-state;cwa;leave;0.023457134878525552
+slepemapy;World-state;missing;leave;0.029197080291970802
+slepemapy;World-state;other;leave;0.025924604590319894
+slepemapy;World-state;topcwa;leave;0.021217023394723745
+slepemapy;World-state;correct;repetition;0.8322221665246379
+slepemapy;World-state;cwa;repetition;0.07021393307734504
+slepemapy;World-state;missing;repetition;0.1561771561771562
+slepemapy;World-state;other;repetition;0.021051037407239133
+slepemapy;World-state;topcwa;repetition;0.12637571157495256

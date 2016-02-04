@@ -201,7 +201,7 @@ class Data():
     def get_items_df(self, filename="items.csv", with_skills=True):
         file = self._filename.split("/")
         file[-1] = filename
-        items = pd.read_csv(os.path.join(*file), index_col="id")
+        items = pd.read_csv(os.path.join(*file), index_col=0)
         if not with_skills:
             return items
         skills = self.get_skills_df()
@@ -335,3 +335,17 @@ def compute_corr(data, min_periods=1, method="pearson", merge_skills=False):
         corr = df.reset_index().pivot("student", "skill_lvl_3", "correct").corr(method=method, min_periods=min_periods)
         corr.to_pickle(filename)
         return corr
+
+
+def convert_slepemapy(filename):
+    answers = pd.read_csv(filename)
+    answers["correct"] = answers["item_asked_id"] == answers["item_answered_id"]
+    answers.rename(columns={
+        "time": "timestamp",
+        "item_asked_id": "item",
+        "user_id": "student",
+        "item_answered_id": "answer",
+    }, inplace=True)
+    answers["response_time"] /= 1000
+    answers.to_pickle(filename.replace("csv", "pd"))
+
