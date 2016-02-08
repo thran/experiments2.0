@@ -348,4 +348,5 @@ def convert_slepemapy(filename):
     }, inplace=True)
     answers["response_time"] /= 1000
     answers.to_pickle(filename.replace("csv", "pd"))
+    return answers
 
