@@ -164,7 +164,7 @@ if False:
 # radek_plot("results/{}.csv".format("anatom"))
 # radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("slepemapy"))
 
-if True:
+if False:
     matmat = pd.read_csv("results/{}.csv".format("matmat"), sep = ";")
     slepemapy = pd.read_csv("results/{}.csv".format("slepemapy"), sep = ";")
     anatom = pd.read_csv("results/{}.csv".format("anatom"), sep = ";")
