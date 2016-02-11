@@ -1,4 +1,4 @@
 *.pd
 *.csv
 cache/*
-!cross-system/**/*.csv
+!cross_system/**/*.csv

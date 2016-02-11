@@ -10,7 +10,7 @@ import matplotlib.pylab as plt
 import seaborn as sns
 
 
-def filter_answers(data, skill, slepemapy=False):
+def filter_answers(data, skill=None, slepemapy=False):
     if slepemapy:
         skill = skill.split("-")
         items = data.get_items_df(filename="flashcards.csv", with_skills=False)
@@ -155,4 +155,4 @@ if False:
     plt.show()
 
 # radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("matmat"))
-radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("slepemapy"))
+# radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("slepemapy"))
