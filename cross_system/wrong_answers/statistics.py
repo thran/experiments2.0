@@ -3,7 +3,7 @@ from collections import defaultdict
 
 from matplotlib.colors import ListedColormap
 from pandas.tseries.offsets import Minute
-from utils.data import Data, convert_slepemapy
+from utils.data import Data, convert_slepemapy, convert_prosoapp
 import pandas as pd
 import numpy as np
 import matplotlib.pylab as plt
@@ -11,17 +11,19 @@ import seaborn as sns
 
 
 def filter_answers(data, skill=None, slepemapy=False):
-    if slepemapy:
-        skill = skill.split("-")
-        items = data.get_items_df(filename="flashcards.csv", with_skills=False)
-        items = items[(items["term_type"] == skill[1]) & (items["context_name"] == skill[0])]
-    else:
-        pk, level = data.get_skill_id(skill)
-        items = data.get_items_df()
-        items = items[items["skill_lvl_" + str(level)] == pk]
     answers = data.get_dataframe_all()
+    if skill is not None and skill is not "all":
+        if slepemapy:
+            skill = skill.split("-")
+            items = data.get_items_df(filename="flashcards.csv", with_skills=False)
+            items = items[(items["term_type"] == skill[1]) & (items["context_name"] == skill[0])]
+        else:
+            pk, level = data.get_skill_id(skill)
+            items = data.get_items_df()
+            items = items[items["skill_lvl_" + str(level)] == pk]
+        answers = pd.DataFrame(answers[answers["item"].isin(items.index)])
     last_in_session(answers)
-    return pd.DataFrame(answers[answers["item"].isin(items.index)])
+    return answers
 
 
 def tag_answers(answers):
@@ -63,7 +65,7 @@ def last_in_session(answers):
     answers["last_in_session"] = answers["next_timestamp"].isnull() | (answers["next_timestamp"] - answers["timestamp"] > pd.Timedelta(Minute(30)))
     # print(answers.loc[:, ["student", "timestamp", "next_timestamp", "last_in_session"]])
 
-def get_stats(data, context, system="matmat"):
+def get_stats(data, context, system="matmat", plot=False):
     print(context)
 
     def zero_or_mean(df):
@@ -91,22 +93,19 @@ def get_stats(data, context, system="matmat"):
     for cl, value in (answers.groupby("class")["next_same"].apply(zero_or_mean)).items():
         df.loc[len(df)] = (system, context, cl, "repetition", value)
 
-
-    pivot = df.pivot("statistics", "classification", "value")
-    # print(df)
-    # print(pivot)
-    # plt.switch_backend('agg')
-    plt.figure()
-    plt.title("{} - {}".format(system, context))
-    pivot = pivot.loc[["freq", "wfreq", "rtime", "successN", "successG", "leave", "repetition"], ["correct", "topcwa", "cwa", "missing", "other"]]
-    sns.heatmap(pivot, annot=True, vmax=1)
-    # plt.savefig("results/wrong answers/{}.png".format(context))
+    if plot:
+        pivot = df.pivot("statistics", "classification", "value")
+        plt.figure()
+        plt.title("{} - {}".format(system, context))
+        pivot = pivot.loc[["freq", "wfreq", "rtime", "successN", "successG", "leave", "repetition"], ["correct", "topcwa", "cwa", "missing", "other"]]
+        sns.heatmap(pivot, annot=True, vmax=1)
     return df
 
 
-def radek_plot(filename):
+def radek_plot(data):
     COLORS = sns.color_palette()
-    data = pd.read_csv(filename, sep = ";")
+    if type(data) is str:
+        data = pd.read_csv(data, sep = ";")
     CL = ['correct', 'topcwa', 'cwa' , 'other', 'missing' ]
 
     contexts = data.context.unique()
@@ -135,24 +134,47 @@ def radek_plot(filename):
     plt.show()
 
 if False:
-    data = Data("../data/matmat/2016-01-04/answers.pd")
+    data = Data("../../data/matmat/2016-01-04/answers.pd")
     # concepts = ["numbers <= 10", "numbers <= 20", "addition <= 10", "subtraction <= 10", "multiplication1"]
-    concepts = ["numbers", "addition", "subtraction", "multiplication", "division"]
+    concepts = ["all", "numbers", "addition", "subtraction", "multiplication", "division"]
     results = pd.concat([get_stats(data, concept) for concept in concepts])
 
     print(results)
     results.to_csv("results/matmat.csv", sep=";", index=False)
-    plt.show()
 
 if False:
     # convert_slepemapy("../data/slepemapy/2016-ab-target-difficulty/answers.csv")
-    data = Data("../data/slepemapy/2016-ab-target-difficulty/answers.pd")
-    concepts = ["Czech Rep.-river", "Czech Rep.-mountains", "Europe-state", "Africa-state", "World-state"]
+    data = Data("../../data/slepemapy/2016-ab-target-difficulty/answers.pd")
+    concepts = ["all", "Czech Rep.-river", "Czech Rep.-mountains", "Europe-state", "Africa-state", "World-state"]
     results = pd.concat([get_stats(data, concept, system="slepemapy") for concept in concepts])
 
     print(results)
     results.to_csv("results/slepemapy.csv", sep=";", index=False)
-    plt.show()
 
-# radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("matmat"))
+
+if False:
+    # convert_prosoapp("../../data/anatom/2016-02-11/answers.csv")
+    data = Data("../../data/anatom/2016-02-11/answers.pd")
+    concepts = ["all"]
+    results = pd.concat([get_stats(data, concept, system="slepemapy") for concept in concepts])
+
+    print(results)
+    results.to_csv("results/anatom.csv", sep=";", index=False)
+
+# radek_plot("results/{}.csv".format("anatom"))
 # radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("slepemapy"))
+
+if True:
+    matmat = pd.read_csv("results/{}.csv".format("matmat"), sep = ";")
+    slepemapy = pd.read_csv("results/{}.csv".format("slepemapy"), sep = ";")
+    anatom = pd.read_csv("results/{}.csv".format("anatom"), sep = ";")
+    results = pd.concat([matmat, slepemapy, anatom])
+    results = results[results["context"] == "all"]
+
+    STATS = list(results["statistics"].unique())
+    STATS.remove('freq') # nuda
+    for i, stat in enumerate(STATS):
+        plt.subplot(3, 2, i+1)
+        plt.title(stat)
+        sns.barplot(data=results[results["statistics"] == stat], x="classification", y="value", hue="system", order=['correct', 'topcwa', 'cwa', 'other', 'missing'])
+    plt.show()

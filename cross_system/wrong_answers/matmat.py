@@ -25,5 +25,5 @@ def repetition(data):
             print()
 
 
-
 repetition(data)
+

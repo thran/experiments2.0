@@ -1,4 +1,39 @@
 system;context;classification;statistics;value
+slepemapy;all;correct;freq;0.7523009046729542
+slepemapy;all;cwa;freq;0.08323377954132803
+slepemapy;all;missing;freq;0.028670130212546666
+slepemapy;all;other;freq;0.07402226191662976
+slepemapy;all;topcwa;freq;0.06177292365654132
+slepemapy;all;correct;wfreq;0.0
+slepemapy;all;cwa;wfreq;0.3360277898126013
+slepemapy;all;missing;wfreq;0.1157458010683991
+slepemapy;all;other;wfreq;0.2988394520331032
+slepemapy;all;topcwa;wfreq;0.2493869570858964
+slepemapy;all;correct;rtime;4.553
+slepemapy;all;cwa;rtime;6.251
+slepemapy;all;missing;rtime;4.514
+slepemapy;all;other;rtime;6.388
+slepemapy;all;topcwa;rtime;6.015
+slepemapy;all;correct;successN;0.8629322813546263
+slepemapy;all;cwa;successN;0.6385160932040632
+slepemapy;all;missing;successN;0.5433383541010544
+slepemapy;all;other;successN;0.5592434420735984
+slepemapy;all;topcwa;successN;0.6911922201984037
+slepemapy;all;correct;successG;0.8131123629211385
+slepemapy;all;cwa;successG;0.6151853559358013
+slepemapy;all;missing;successG;0.4171150993338957
+slepemapy;all;other;successG;0.5349125222622985
+slepemapy;all;topcwa;successG;0.6556747918081418
+slepemapy;all;correct;leave;0.014413914055982946
+slepemapy;all;cwa;leave;0.020400349495881643
+slepemapy;all;missing;leave;0.028643631423441226
+slepemapy;all;other;leave;0.024131231509692232
+slepemapy;all;topcwa;leave;0.019736145895798793
+slepemapy;all;correct;repetition;0.8629322813546263
+slepemapy;all;cwa;repetition;0.06737510701807159
+slepemapy;all;missing;repetition;0.1951252909763111
+slepemapy;all;other;repetition;0.023457348150688135
+slepemapy;all;topcwa;repetition;0.12324012476450309
 slepemapy;Czech Rep.-river;correct;freq;0.7801794105083297
 slepemapy;Czech Rep.-river;cwa;freq;0.07270397266125588
 slepemapy;Czech Rep.-river;missing;freq;0.032829583107242225

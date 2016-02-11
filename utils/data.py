@@ -350,3 +350,15 @@ def convert_slepemapy(filename):
     answers.to_pickle(filename.replace("csv", "pd"))
     return answers
 
+def convert_prosoapp(filename):
+    answers = pd.read_csv(filename)
+    answers["correct"] = answers["item_asked"] == answers["item_answered"]
+    answers.rename(columns={
+        "time": "timestamp",
+        "user": "student",
+        "item_answered": "answer",
+    }, inplace=True)
+    answers["response_time"] /= 1000
+    answers.to_pickle(filename.replace("csv", "pd"))
+    return answers
+
