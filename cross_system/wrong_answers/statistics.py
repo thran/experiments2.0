@@ -10,10 +10,10 @@ import matplotlib.pylab as plt
 import seaborn as sns
 
 
-def filter_answers(data, skill=None, slepemapy=False):
+def filter_answers(data, skill=None, prosoapps=False):
     answers = data.get_dataframe_all()
     if skill is not None and skill is not "all":
-        if slepemapy:
+        if prosoapps:
             skill = skill.split("-")
             items = data.get_items_df(filename="flashcards.csv", with_skills=False)
             items = items[(items["term_type"] == skill[1]) & (items["context_name"] == skill[0])]
@@ -23,6 +23,8 @@ def filter_answers(data, skill=None, slepemapy=False):
             items = items[items["skill_lvl_" + str(level)] == pk]
         answers = pd.DataFrame(answers[answers["item"].isin(items.index)])
     last_in_session(answers)
+    if prosoapps:
+        answers = answers[answers["guess"] == 0].copy()
     return answers
 
 
@@ -74,7 +76,7 @@ def get_stats(data, context, system="matmat", plot=False):
         else:
             return df.mean()
 
-    answers = filter_answers(data, context, slepemapy=system=="slepemapy")
+    answers = filter_answers(data, context, prosoapps=system!="matmat")
     next_item(answers)
     df = pd.DataFrame(columns= ["system", "context", "classification", "statistics", "value"])
     answers = tag_answers(answers)
@@ -145,36 +147,77 @@ if False:
 if False:
     # convert_slepemapy("../data/slepemapy/2016-ab-target-difficulty/answers.csv")
     data = Data("../../data/slepemapy/2016-ab-target-difficulty/answers.pd")
-    concepts = ["all", "Czech Rep.-river", "Czech Rep.-mountains", "Europe-state", "Africa-state", "World-state"]
+    concepts = ["all", "United States-state", "United States-city", "Czech Rep.-river", "Czech Rep.-mountains", "Europe-state", "Africa-state", "World-state"]
+    # concepts = ["all"]
     results = pd.concat([get_stats(data, concept, system="slepemapy") for concept in concepts])
 
     print(results)
     results.to_csv("results/slepemapy.csv", sep=";", index=False)
 
-
 if False:
     # convert_prosoapp("../../data/anatom/2016-02-11/answers.csv")
     data = Data("../../data/anatom/2016-02-11/answers.pd")
     concepts = ["all"]
-    results = pd.concat([get_stats(data, concept, system="slepemapy") for concept in concepts])
+    results = pd.concat([get_stats(data, concept, system="anatom") for concept in concepts])
 
     print(results)
     results.to_csv("results/anatom.csv", sep=";", index=False)
 
 # radek_plot("results/{}.csv".format("anatom"))
-# radek_plot("../cross-system/wrong_answers/" + "results/{}.csv".format("slepemapy"))
+# radek_plot("results/{}.csv".format("slepemapy"))
 
 if False:
+    normalize = False
+
     matmat = pd.read_csv("results/{}.csv".format("matmat"), sep = ";")
     slepemapy = pd.read_csv("results/{}.csv".format("slepemapy"), sep = ";")
     anatom = pd.read_csv("results/{}.csv".format("anatom"), sep = ";")
     results = pd.concat([matmat, slepemapy, anatom])
-    results = results[results["context"] == "all"]
 
     STATS = list(results["statistics"].unique())
     STATS.remove('freq') # nuda
-    for i, stat in enumerate(STATS):
-        plt.subplot(3, 2, i+1)
-        plt.title(stat)
-        sns.barplot(data=results[results["statistics"] == stat], x="classification", y="value", hue="system", order=['correct', 'topcwa', 'cwa', 'other', 'missing'])
+
+    if normalize:
+        results = results[results["context"] == "all"]
+        for stat in STATS:
+            for system in results["system"].unique():
+                filter = (results["system"] == system) & (results["statistics"] == stat)
+                value = results.loc[filter & (results["classification"] == "correct"), "value"].iloc[0]
+                if value:
+                    results.loc[filter, "value"] /= value
+
+    if False:
+        for i, stat in enumerate(STATS):
+            plt.subplot(3, 2, i+1)
+            plt.title(stat)
+            sns.pointplot(data=results[results["statistics"] == stat], x="classification", y="value", hue="system", order=['correct', 'topcwa', 'cwa', 'other', 'missing'])
+
+    if True:
+        results2 = results[results["context"] == "all"]
+        plt.subplot(121)
+        sns.barplot(data=results2[results2["statistics"] == "wfreq"], x="classification", y="value", hue="system", order=['topcwa', 'cwa', 'other', 'missing'], )
+        plt.ylim(0, 0.5)
+
+    if True:
+        plt.subplot(122)
+        results2 = results[results["system"] == "slepemapy"]
+        print(results["context"].unique())
+        sns.barplot(data=results2[results2["statistics"] == "wfreq"], x="classification", y="value", hue="context",
+                    order=['topcwa', 'cwa', 'other', 'missing'],
+                    hue_order=['United States-state', 'Africa-state', 'World-state', 'Europe-state', 'Czech Rep.-river',]
+                    )
+
+    if False:
+        STATS.remove('wfreq')
+        STATS.remove('repetition')
+
+        for i, stat in enumerate(STATS):
+            plt.subplot(2, 2, i+1)
+            plt.title(stat)
+            sns.pointplot(data=results[results["statistics"] == stat], x="classification", y="value", hue="system", order=['correct', 'topcwa', 'cwa', 'other', 'missing'])
+
     plt.show()
+
+current_palette = sns.color_palette()
+sns.palplot(current_palette)
+print([[c * 255 for c in p] for p in current_palette])
