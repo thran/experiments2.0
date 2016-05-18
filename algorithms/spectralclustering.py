@@ -74,7 +74,7 @@ class SpectralClusterer:
                 #print i, ": ", KM.cost
                 if bestCost > KM.cost:
                     bestCost = KM.cost
-                    self.solution = KM.pointsNearestCluster
+                    self.solution = KM.nearest_centroids
             sys.stdout.write("\n")
             sys.stdout.flush()
 
