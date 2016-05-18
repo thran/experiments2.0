@@ -1,7 +1,15 @@
+import os
+
+import pandas as pd
+
+from models.eloHierarchical import EloHierarchicalModel
+from models.eloPriorCurrent import EloPriorCurrentModel
 from utils.data import Data
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
+
+from utils.runner import Runner
 
 
 def response_times(data, time_dist=True, mean_times_dist=True):
@@ -76,12 +84,57 @@ def success_rate(data, per_student=True, per_item=True):
         plt.title("Success rate distribution per item")
 
 
+def pair_grid(data):
+    df = data.get_dataframe_all()
+    data.trim_times()
+    data.add_log_response_times()
+    students = pd.DataFrame(index=df["student"].unique())
 
-data = Data("../data/matmat/2015-11-20/answers.pd")
+    students["Success rate"] = df.groupby("student")["correct"].mean()
+    # students["avg_response_time"] = df.groupby("student")["response_time"].mean()
+    students["Avg. log of response time"] = df.groupby("student")["log_response_time"].mean()
+    if False and os.path.exists(os.path.dirname(data._filename) + "/skill_global.pd"):
+        students["Skill"] = pd.read_pickle(os.path.dirname(data._filename) + "/skill_global.pd")
+    students["Prior skill"] = pd.read_pickle(os.path.dirname(data._filename) + "/skill_prior.pd")
+    students["Log of answer count"] = np.log10(df.groupby("student").size())
+
+    # students = students.sample(1000)
+    if "slepemapy" in data._filename and False:
+        groups = df.groupby("student")["experiment_setup_id"].first()
+        students["AB group"] = ""
+        for i, name in ((14, "50%"), (15, "35%"), (16, "20%"), (17, "5%"), ):
+            students["AB group"][groups == i] = name
+        g = sns.PairGrid(students, hue="AB group", hue_order=["5%", "20%", "35%", "50%", ])
+        g = g.map_diag(sns.distplot)
+        g = g.map_upper(plt.scatter)
+        g = g.map_lower(sns.kdeplot)
+        g = g.add_legend()
+    else:
+        g = sns.PairGrid(students)
+        g = g.map_diag(plt.hist)
+        g = g.map_upper(plt.scatter, marker=".")
+        g = g.map_lower(sns.kdeplot, shade=False)
+
+
+data = Data("../data/matmat/2016-04-18/answers.pd")
+# data = Data("../data/slepemapy/2016-ab-target-difficulty/answers.pd")
+data.filter_data(10, 10)
 
 # response_times(data, time_dist=True, mean_times_dist=False)
 # answer_count(data, per_student=False, per_item=True, student_drop_off=False)
 # success_rate(data, per_student=False)
 # print(data.get_items_df().count())
 
+pair_grid(data)
 plt.show()
+
+
+if False:
+    model = EloPriorCurrentModel(KC=2, KI=0.5)
+    # model = EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)
+    Runner(data, model).run(force=True)
+    pd.Series(model.global_skill).to_pickle(os.path.dirname(data._filename) + "/skill_prior.pd")
+    # pd.Series(model.skill[1]).to_pickle(os.path.dirname(data._filename) + "/skill_global.pd")
+
+
+
