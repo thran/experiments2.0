@@ -1,6 +1,8 @@
 import copy
 from collections import defaultdict
 
+from sklearn.decomposition import PCA
+
 from algorithms.spectralclustering import SpectralClusterer
 from models.eloConcepts import EloConcepts
 from models.eloHierarchical import EloHierarchicalModel
@@ -379,7 +381,7 @@ if False:
     Evaluator(data_skip_time(None), model(None)).brier_graphs()
     Evaluator(data_linear(None), model(None)).brier_graphs()
 
-compare_more_models_final(models, data(None), runs=20, labels=l1)
+# compare_more_models_final(models, data(None), runs=20, labels=l1)
 # compare_more_models(times, DATA(None), labels=["noTime", "trasholdTime", "expTime", "linearTime"], runs=1)
 if False:
     df = pd.read_pickle("corr-all.pd")
@@ -390,6 +392,17 @@ if False:
     for i in range(1, 4):
         plt.plot((0, 16), (i * 4, i * 4), color="white")
         plt.plot((i * 4, i * 4), (0, 16), color="white")
+
+if True:
+    df = pd.read_pickle("corr-all.pd")
+    df = df.loc[l1, l1]
+
+    pca = PCA(n_components=2)
+    pca.fit(df)
+    for name, (x, y) in zip(df.columns, pca.transform(df)):
+        plt.plot(x, y, 'o')
+        plt.text(x + .01, y + .01, name)
+
 
 models_concepts = {
     "1Flat": (data, lambda l: EloPriorCurrentModel(KC=2, KI=0.5)),
