@@ -11,7 +11,7 @@ import matplotlib.pylab as plt
 import seaborn as sns
 import numpy as np
 
-d = data.Data("../data/matmat/2015-11-20/answers.pd", train_size=0.5, only_first=True)
+d = data.Data("../data/matmat/2016-06-27/answers.pd", train_size=0.5, only_first=True)
 # d = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
 # d = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.66), (10, 0.33)]))
 concepts = d.get_concepts()
@@ -30,13 +30,13 @@ compare_models(d, [
     SkipHandler(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02)),
     # EloHierarchicalModel(alpha=0.25, beta=0.02),
     # EloConcepts(),
-], dont=0, force_evaluate=0, force_run=0, runs=20, hue_order=False, answer_filters={
-    # "long (50) student": data.filter_students_with_many_answers(),
-    # "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
-    # "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),
-    # "response >5s-0.5": data.transform_response_by_time(((5, 0.5),))
+], dont=0, force_evaluate=0, force_run=0, runs=5, hue_order=False, answer_filters={
+    "long (50) student": data.filter_students_with_many_answers(),
+    "long (30) student": data.filter_students_with_many_answers(number_of_answers=30),
+    "long (11) student": data.filter_students_with_many_answers(number_of_answers=11),
+    "response >5s-0.5": data.transform_response_by_time(((5, 0.5),))
 },
-               palette=sns.color_palette()[:2] * 4
+               # palette=sns.color_palette()[:2] * 4
                )
 
 

@@ -12,11 +12,11 @@ import seaborn as sns
 import numpy as np
 import pandas as pd
 
-d = data.Data("../data/matmat/2015-11-20/answers.pd")
-concepts = d.get_concepts()
+# d = data.Data("../data/matmat/2016-06-27/answers.pd")
+# concepts = d.get_concepts()
 # d_filtered = data.Data("../data/matmat/2015-11-20/answers.pd", filter=(10, 10))
-d2 = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
-d3 = data.Data("../data/matmat/2015-11-20/answers.pd", response_modification=data.LinearDrop(14))
+# d2 = data.Data("../data/matmat/2016-06-27/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]))
+# d3 = data.Data("../data/matmat/2016-06-27/answers.pd", response_modification=data.LinearDrop(14))
 
 def plot_skill_values(data, values):
     colors = ["p", "b", "y", "k", "g", "r"]
@@ -100,7 +100,7 @@ if 0:
     plot_item_values(d, get_difficulty(d, m, normalize=True))
     # plot_skill_values(d, get_mean_skill(d, m))
 
-if 1:
+if 0:
     compare_models(d, d3,
         EloPriorCurrentModel(KC=2, KI=0.5),
         EloPriorCurrentModel(KC=2, KI=0.5),

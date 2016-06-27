@@ -116,7 +116,7 @@ def pair_grid(data):
         g = g.map_lower(sns.kdeplot, shade=False)
 
 
-data = Data("../data/matmat/2016-04-18/answers.pd")
+data = Data("../data/matmat/2016-06-27/answers.pd")
 # data = Data("../data/slepemapy/2016-ab-target-difficulty/answers.pd")
 data.filter_data(10, 10)
 

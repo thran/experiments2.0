@@ -9,8 +9,9 @@ import matplotlib.pylab as plt
 import scipy.cluster.hierarchy as hr
 import scipy.spatial.distance as dst
 
-d = data.Data("../data/matmat/2015-12-16/answers.pd", only_first=True)
-dt = data.Data("../data/matmat/2015-12-16/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]), only_first=True)
+d = data.Data("../data/matmat/2016-06-27/answers.pd", only_first=True, train_size=1)
+# dt = data.Data("../data/matmat/2016-06-27/answers.pd", response_modification=data.TimeLimitResponseModificator([(5, 0.5)]), only_first=True, train_size=1)
+dt = data.Data("../data/matmat/2016-06-27/answers.pd", response_modification=data.LinearDrop(14), only_first=True, train_size=1)
 
 
 def item_clustering(data, skill, cluster_number=3, plot=True):
@@ -106,13 +107,13 @@ def hierarchical_clustering(data, skill,  method='single', metric='euclidean', d
         Z = hr.linkage(corr, method=method, metric=metric)
     else:
         Z = hr.linkage(dst.squareform(1 - corr), method=method)
+    Z[Z < 0] = 0
     if dendrogram:
         plt.title('{}: method: {}, metric: {}, as vectors: {}'.format(skill, method, metric, corr_as_vectors))
         plt.xlabel('items' if not concepts else "concepts")
         plt.ylabel('distance')
         hr.dendrogram(Z, leaf_rotation=90., leaf_font_size=10., labels=labels)
 
-    Z[Z < 0] = 0
     return hr.fcluster(Z, cluster_number, "maxclust")
 
 
@@ -144,7 +145,7 @@ if 0:
             plt.figure(figsize=(25, 15), dpi=150)
             plt.title(skill)
             all_in_one(dat, skill, concepts=True)
-            plt.savefig("results/concepts/all_in_one/{}{}.png".format(skill, " - time" if i else ""))
+            plt.savefig("results/concepts/all_in_one/{}{} d2.png".format(skill, " - time" if i else ""))
 
 if 0:
     skills = ["numbers", "numbers <= 10", "numbers <= 20"]
@@ -154,9 +155,9 @@ if 0:
             plt.figure(figsize=(25, 15), dpi=150)
             plt.title(skill)
             all_in_one(dat, skill, concepts=False)
-            plt.savefig("results/concepts/all_in_one/items - {}{}.png".format(skill, " - time" if i else ""))
+            plt.savefig("results/concepts/all_in_one/items - {}{} d2.png".format(skill, " - time" if i else ""))
 
 # all_in_one(d, "numbers", concepts=False)
 # all_in_one(dt, "numbers", concepts=True)
 # all_in_one(d, "subtraction <= 10", concepts=True)
-# plt.show()
+plt.show()

@@ -1,23 +1,15 @@
-import json
-import re
-from algorithms.spectralclustering import SpectralClusterer
-from matmat.experiments_clustering import item_clustering, concept_clustering, all_in_one
-from matmat.experiments_difficulties import difficulty_vs_time, get_difficulty
-from models.eloHierarchical import EloHierarchicalModel
+from matmat.experiments_clustering import all_in_one
 from models.eloPriorCurrent import EloPriorCurrentModel
 from utils import utils
-from utils.data import Data, TimeLimitResponseModificator, ExpDrop, LinearDrop
-from utils.data import compute_corr
+from utils.data import Data
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pylab as plt
-import scipy.cluster.hierarchy as hr
-import scipy.spatial.distance as dst
 
 from utils.evaluator import Evaluator
 
-data = Data("../data/matmat/2016-01-04/answers.pd", train_size=1)
+data = Data("../../data/matmat/2016-06-27/answers.pd", train_size=1)
 data.trim_times()
 answers = data.get_dataframe_all()
 
@@ -39,8 +31,8 @@ items = data.get_items_df()
 items = items[(items["skill_lvl_2"] == 210) & ~items["skill_lvl_3"].isnull()].loc[:, ("question", "answer", "visualization")]
 items = items[items["visualization"] == "free_answer"]
 
-answers[answers["item"].isin(items.index)].to_pickle("../data/matmat/2016-01-04/answers-multiplication.pd")
-data_multiplication = Data("../data/matmat/2016-01-04/answers-multiplication.pd")
+answers[answers["item"].isin(items.index)].to_pickle("../../data/matmat/2016-01-04/answers-multiplication.pd")
+data_multiplication = Data("../../data/matmat/2016-01-04/answers-multiplication.pd")
 model = EloPriorCurrentModel(alpha=1.4, beta=0.1, KC=3, KI=0.5)
 
 items = items.join(pd.Series(answers.groupby("item").size(), name="answer_count"))
