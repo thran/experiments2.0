@@ -16,8 +16,8 @@ class Runner():
         self._log = {}
         self._hash = get_hash(self._model, self._data)
 
-    def _pandas_logger(self, answer, prediction):
-        self._log[answer["id"]] = prediction
+    def _pandas_logger(self, answer, prediction, time_prediction=None):
+        self._log[answer["id"]] = [prediction, time_prediction]
 
     def clean(self):
         os.remove(self.get_log_filename())
@@ -51,7 +51,7 @@ class Runner():
             "dataset size": len(self._data.get_dataframe_all()),
         }
         json.dump(report, open(self.get_report_filename(), "w"), indent=4)
-        pd.Series(self._log, index=self._log.keys()).to_pickle(self.get_log_filename())
+        pd.DataFrame.from_dict(self._log, orient='index').to_pickle(self.get_log_filename())
 
         print("Report and log written to cache - {} ".format(self._hash))
         return self._hash

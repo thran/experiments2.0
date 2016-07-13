@@ -28,14 +28,13 @@ class EloHierarchicalModel(Model):
         self.item_attempts = defaultdict(lambda: 0)
         self.first_attempt = defaultdict(lambda: defaultdict(lambda: True))
 
-
     def predict(self, student, item, extra=None):
         skill = self._get_skill(student, self.item_parents[item])
         prediction = self._sigmoid(skill - self.difficulty[item])
 
         return prediction
 
-    def update(self, student, item, prediction, correct, extra=None):
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         dif = (correct - prediction)
 
         for level, skill in enumerate(self._get_parents(item)):

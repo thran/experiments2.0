@@ -34,7 +34,7 @@ class SkipHandler(Model):
 
         return skip_K * self._model.predict(student, item, extra)
 
-    def update(self, student, item, prediction, correct, extra=None):
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         skip = type(extra["answer"]) == float and np.isnan(extra["answer"])
         if self.last_skips[student] > 0:
             self.after_skip[self.last_skips[student]] += 1

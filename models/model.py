@@ -31,26 +31,31 @@ class Model:
         pass
 
     def process_data(self, data, logger=None, only_train=False):
+        def add_time_prediction_if_missing(param):
+            if type(param) is not tuple or len(param) == 1:
+                return param, None
+            return param
+
         print("Processing {} on {}".format(self, data))
         print("  training")
         for answer in data.iter_train():
-            prediction = self.predict(answer["student"], answer["item"], answer)
-            self.update(answer["student"], answer["item"], prediction, answer["correct"], answer)
+            prediction, time_prediction = add_time_prediction_if_missing(self.predict(answer["student"], answer["item"], answer))
+            self.update(answer["student"], answer["item"], prediction, time_prediction, answer["correct"], answer["response_time"], answer)
 
         if not only_train:
             print("  testing")
             for answer in data.iter_test():
-                prediction = self.predict(answer["student"], answer["item"], answer)
-                self.update(answer["student"], answer["item"], prediction, answer["correct"], answer)
+                prediction, time_prediction = add_time_prediction_if_missing(self.predict(answer["student"], answer["item"], answer))
+                self.update(answer["student"], answer["item"], prediction, time_prediction, answer["correct"], answer["response_time"], answer)
                 if logger is not None:
-                    logger(answer, prediction)
+                    logger(answer, prediction, time_prediction)
 
         self.post_process_data(data)
 
     def predict(self, student, item, extra):
         pass
 
-    def update(self, student, item, prediction, correct, extra):
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra):
         pass
 
 
@@ -70,7 +75,7 @@ class AvgModel(Model):
     def predict(self, student, item, extra=None):
         return self._avg
 
-    def update(self, student, item, prediction, correct, extra=None):
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         self._all += 1
         if correct:
             self._corrects += 1
@@ -91,7 +96,7 @@ class ItemAvgModel(Model):
     def predict(self, student, item, extra=None):
         return self.corrects[item] / self.counts[item] if self.counts[item] > 0 else self._init_avg
 
-    def update(self, student, item, prediction, correct, extra=None):
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         self.counts[item] += 1
         self.corrects[item] += correct
 

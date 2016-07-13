@@ -99,11 +99,15 @@ class Data():
             self._data = self._data_train
             self._data_test = pd.DataFrame(columns=self._data.columns)
 
-    def join_predictions(self, predictions):
+    def join_predictions(self, df):
+        predictions = df[0]
+        time_predictions = df[1]
         self._load_file()
         if "prediction" in self._data_test.columns:
             del self._data_test["prediction"]
+            del self._data_test["time_prediction"]
         self._data_test = self._data_test.join(pd.Series(predictions, name="prediction"), on="id")
+        self._data_test = self._data_test.join(pd.Series(time_predictions, name="time_prediction"), on="id")
 
     def get_items(self):
         self._load_file()

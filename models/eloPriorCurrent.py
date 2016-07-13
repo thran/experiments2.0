@@ -32,7 +32,7 @@ class EloPriorCurrentModel(Model):
         prediction = self._sigmoid(self.local_skill[item][student] - self.difficulty[item], random_factor)
         return prediction
 
-    def update(self, student, item, prediction, correct, extra=None):
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         dif = (correct - prediction)
 
         if self.first_attempt[item][student]:
