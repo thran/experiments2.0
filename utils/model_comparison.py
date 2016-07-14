@@ -47,7 +47,7 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                 print("Brier uncertainty: {:.3}".format(r["brier"]["uncertainty"]))
                 print("=" * 50)
 
-                model_name = (str(model) if type(data) is not list else str(model) + str(d))[:50]
+                model_name = (str(model) if type(data) is not list else str(model) + str(d))[:150]
                 if names is not None:
                     model_name = names[i]
                 df.loc[len(df)] = (model_name, filter_name, r[metric], r['time'][metric])

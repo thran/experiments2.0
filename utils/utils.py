@@ -3,20 +3,27 @@ from functools import reduce
 from utils import  evaluator
 import pandas as pd
 import seaborn as sns
+import matplotlib.pylab as plt
 
-def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=None):
+def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=None, time=False):
     params = parameter_grid(parameters)
     print("Combinations:", reduce(lambda x,y: x*y, (map(len,parameters.values())), 1))
     df = pd.DataFrame(columns=list(parameters.keys()) + [metric])
     for p in params:
         model_params.update(p)
-        df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report()[metric]]
-
+        if not time:
+            df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report()[metric]]
+        else:
+            df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report()['time'][metric]]
 
     if plot_axes:
-        results = df.pivot(*plot_axes)[metric]
-        results.sort_index(ascending=False, inplace=True)
-        sns.heatmap(results)
+        if type(plot_axes) is not list:
+            print(df)
+            plt.plot(parameters[plot_axes], df[metric])
+        else:
+            results = df.pivot(*plot_axes)[metric]
+            results.sort_index(ascending=False, inplace=True)
+            sns.heatmap(results)
 
 
 def parameter_grid(p):

@@ -85,7 +85,7 @@ class TimeItemAvgModel(Model):
     def __init__(self, init_avg=1):
         Model.__init__(self)
         self.VERSION = 1
-        self.name = "Timeitem-average"
+        self.name = "TimeItem-average"
 
         self._init_avg = init_avg
 
@@ -103,3 +103,38 @@ class TimeItemAvgModel(Model):
         self._log_avg += (math.log(response_time) - self._log_avg) / self._count
         self._counts[item] += 1
         self._log_avgs[item] += (math.log(response_time) - self._log_avgs[item]) / self._counts[item]
+
+
+class BasicTimeModel(Model):
+    def __init__(self, alpha=1.0, beta=0.1, K=1):
+        Model.__init__(self)
+        self.VERSION = 2
+        self.name = "Basic-Time"
+
+        self._alpha = alpha
+        self._beta = beta
+        self._K = K
+
+        self.decay_function = lambda x: alpha / (1 + beta * x)
+
+    def pre_process_data(self, data):
+        self.skill = defaultdict(lambda: 0)
+        self.intensity = defaultdict(lambda: 1)
+        self.student_attempts = defaultdict(lambda: 0)
+        self.item_attempts = defaultdict(lambda: 0)
+        self.first_attempt = defaultdict(lambda: defaultdict(lambda: True))
+
+    def predict(self, student, item, extra=None):
+        prediction = self.intensity[item] - self.skill[student]
+        return math.exp(prediction)
+
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
+        dif = (math.log(time_prediction) - math.log(response_time))
+
+        if self.first_attempt[item][student]:
+            self.intensity[item] -= self.decay_function(self.item_attempts[item]) * dif
+            self.item_attempts[item] += 1
+            self.first_attempt[item][student] = False
+
+        self.skill[student] += self._K * dif
+        self.student_attempts[student] += 1
