@@ -13,7 +13,7 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
         return
     if answer_filters is None:
         answer_filters = {}
-    df = pd.DataFrame(columns=["model", "data", metric])
+    df = pd.DataFrame(columns=["model", "data", metric, 'time-'+metric])
     datas = [data] * len(models) if type(data) is not list else data
     for i, (dat, model) in enumerate(zip(datas, models)):
         for run in range(runs):
@@ -36,6 +36,7 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                     r = report[filter_name]
                 print(model, filter_name)
                 print("RMSE: {:.5}".format(r["rmse"]))
+                print("RMSE-time: {:.5}".format(r['time']["rmse"]))
                 if diff_to is not None:
                     print("RMSE diff: {:.5f}".format(diff_to - r["rmse"]))
                 print("LL: {:.6}".format(r["log-likely-hood"]))
@@ -49,15 +50,17 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                 model_name = (str(model) if type(data) is not list else str(model) + str(d))[:50]
                 if names is not None:
                     model_name = names[i]
-                df.loc[len(df)] = (model_name, filter_name, r[metric])
+                df.loc[len(df)] = (model_name, filter_name, r[metric], r['time'][metric])
 
-    if type(data) is not list:
-        plt.title(data)
     print(df)
 
-    hue_order = sorted(df["model"].unique(), key=lambda i: df[df["model"]==i][metric].mean()) if hue_order else None
+    for m in [metric, 'time-'+metric]:
+        plt.figure()
+        if type(data) is not list:
+            plt.title(data)
+        hue_order = sorted(df["model"].unique(), key=lambda i: df[df["model"]==i][m].mean()) if hue_order else None
 
-    sns.barplot(x="data", y=metric, hue="model", data=df,
-                hue_order=hue_order,
-                order=(["all"] if with_all else []) + sorted(list(answer_filters.keys())), **kwargs)
-    plt.ylim((math.floor(100 * df[metric].min()) / 100, math.ceil(100 * df[metric].max()) / 100))
+        sns.barplot(x="data", y=m, hue="model", data=df,
+                    hue_order=hue_order,
+                    order=(["all"] if with_all else []) + sorted(list(answer_filters.keys())), **kwargs)
+        plt.ylim((math.floor(100 * df[m].min()) / 100, math.ceil(100 * df[m].max()) / 100))

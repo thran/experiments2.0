@@ -92,16 +92,48 @@ class ItemAvgModel(Model):
     def pre_process_data(self, data):
         self.corrects = defaultdict(lambda: 0)
         self.counts = defaultdict(lambda: 0)
+        self._corrects = 0
+        self._all = 0
+        self._avg = self._init_avg
 
     def predict(self, student, item, extra=None):
-        return self.corrects[item] / self.counts[item] if self.counts[item] > 0 else self._init_avg
+        return self.corrects[item] / self.counts[item] if self.counts[item] > 0 else self._avg
 
     def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         self.counts[item] += 1
         self.corrects[item] += correct
+        self._corrects += correct
+        self._all += 1
+        self._avg = self._corrects / self._all
 
     def post_process_data(self, data):
         self.difficulty = pd.Series(self.corrects) / pd.Series(self.counts)
 
-    def get_difficulties(self, items):
-        return [-self.predict(None, i) for i in items]
+
+class StudentAvgModel(Model):
+    def __init__(self, init_avg=0.5):
+        Model.__init__(self)
+        self.VERSION = 1
+        self.name = "Student-average"
+        self._init_avg = init_avg
+
+    def pre_process_data(self, data):
+        self.corrects = defaultdict(lambda: 0)
+        self.counts = defaultdict(lambda: 0)
+        self._corrects = 0
+        self._all = 0
+        self._avg = self._init_avg
+
+    def predict(self, student, item, extra=None):
+        return self.corrects[student] / self.counts[student] if self.counts[student] > 0 else self._avg
+
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
+        self.counts[student] += 1
+        self.corrects[student] += correct
+        self._corrects += correct
+        self._all += 1
+        self._avg = self._corrects / self._all
+
+    def post_process_data(self, data):
+        self.difficulty = pd.Series(self.corrects) / pd.Series(self.counts)
+
