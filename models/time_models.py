@@ -10,30 +10,30 @@ class TimeCombiner(Model):
     Model work with tree structure and update all ancestors with level based decay
     """
 
-    def __init__(self, predictionModel, timeModel):
+    def __init__(self, prediction_model, time_model):
         Model.__init__(self)
-        self._predictionModel = predictionModel
-        self._timeModel = timeModel
+        self._prediction_model = prediction_model
+        self._time_model = time_model
 
     def __str__(self):
-        return "{} + {}".format(self._predictionModel, self._timeModel)
+        return "{} + {}".format(self._prediction_model, self._time_model)
 
     def pre_process_data(self, data):
-        self._predictionModel.pre_process_data(data)
-        self._timeModel.pre_process_data(data)
+        self._prediction_model.pre_process_data(data)
+        self._time_model.pre_process_data(data)
 
     def post_process_data(self, data):
-        self._predictionModel.post_process_data(data)
-        self._timeModel.post_process_data(data)
+        self._prediction_model.post_process_data(data)
+        self._time_model.post_process_data(data)
 
     def predict(self, student, item, extra):
-        prediction = self._predictionModel.predict(student, item, extra)
-        time_prediction = self._timeModel.predict(student, item, extra)
+        prediction = self._prediction_model.predict(student, item, extra)
+        time_prediction = self._time_model.predict(student, item, extra)
         return prediction, time_prediction
 
     def update(self, student, item, prediction, time_prediction, correct, response_time, extra):
-        self._predictionModel.update(student, item, prediction, time_prediction, correct, response_time, extra)
-        self._timeModel.update(student, item, prediction, time_prediction, correct, response_time, extra)
+        self._prediction_model.update(student, item, prediction, time_prediction, correct, response_time, extra)
+        self._time_model.update(student, item, prediction, time_prediction, correct, response_time, extra)
 
 
 class TimeAvgModel(Model):
