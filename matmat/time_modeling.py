@@ -9,13 +9,7 @@ from utils.evaluator import Evaluator
 import matplotlib.pylab as plt
 
 from utils.model_comparison import compare_models
-from utils.utils import grid_search
-
-data = d.Data("../data/matmat/2016-06-27/answers.pd")
-data.trim_times()
-
-data_long = d.Data("../data/matmat/2016-06-27/answers.pd", filter=(100, 100))
-data_long.trim_times()
+from utils.utils import grid_search, enumerate_df
 
 
 def grid_search_K():
@@ -25,6 +19,7 @@ def grid_search_K():
                 plot_axes='K', time=True,
                 )
 
+
 def grid_search_AB():
     grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), BasicTimeModel(**kwargs)),
                 {"K": 0.25}, {
@@ -32,6 +27,7 @@ def grid_search_AB():
                     "beta": np.arange(0.06, 0.2, 0.02),
                 }, plot_axes=['alpha', 'beta'], time=True,
                 )
+
 
 def skill_vs_speed(prediction_mode, time_model, data):
     model = TimeCombiner(prediction_mode, time_model)
@@ -42,6 +38,33 @@ def skill_vs_speed(prediction_mode, time_model, data):
     sns.jointplot(pd.Series(skills), pd.Series(fastness), kind='kde', space=0).set_axis_labels("skill", "speed")
 
 
+def learning(data, length=99, measures=None):
+    if measures is None:
+        measures = ['correct']
+
+    data['response_time_log'] = np.log(data['response_time'])
+
+    grouped = data.groupby(['student'])
+    # grouped = data.groupby(['student', 'skill_lvl_1'])
+    data = grouped.apply(enumerate_df)
+    points = range(1, length + 1)
+
+    plt.subplot(1 + len(measures), 1, 1)
+    plt.bar(points, [(data['enum'] == p).sum() for p in points])
+    plt.ylabel('User count')
+    for i, measure in enumerate(measures):
+        plt.subplot(1 + len(measures), 1, i + 2)
+        plt.plot(points, [data[data['enum'] == p][measure].mean() for p in points])
+        plt.xlabel('# answers')
+        plt.ylabel(measure)
+
+
+data = d.Data("../data/matmat/2016-06-27/answers.pd")
+data.trim_times()
+
+data_long = d.Data("../data/matmat/2016-06-27/answers.pd", filter=(100, 100))
+data_long.trim_times()
+
 compare_models(data, [
     TimeCombiner(AvgModel(), TimeAvgModel()),
     TimeCombiner(ItemAvgModel(), TimeItemAvgModel()),
@@ -49,11 +72,16 @@ compare_models(data, [
     TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
 ], dont=1)
 
-skill_vs_speed(
-    EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02),
-    BasicTimeModel(alpha=0.6, beta=0.1, K=0.25),
-    data
-)
+
+learning(data.get_dataframe_all().join(pd.read_csv('../data/matmat/2016-06-27/items.csv'), on='item', rsuffix='_item'),
+         measures=['correct', 'response_time', 'response_time_log'])
+
+
+# skill_vs_speed(
+#     EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02),
+#     BasicTimeModel(alpha=0.6, beta=0.1, K=0.25),
+#     data
+# )
 
 
 # grid_search_K()
@@ -63,6 +91,6 @@ skill_vs_speed(
 # model = TimeCombiner(ItemAvgModel(), TimeStudentAvgModel())
 # Evaluator(data, model).get_report(force_run=True)
 # Evaluator(data, model).brier_graphs()
-# Evaluator(data, model).brier_graphs(time=True)
+# Evaluator(data, TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25))).brier_graphs(time=True)
 # Evaluator(data, model).brier_graphs(time_raw=True)
 plt.show()

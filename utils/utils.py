@@ -35,3 +35,9 @@ def parameter_grid(p):
         for v in product(*values):
             params = dict(zip(keys, v))
             yield params
+
+
+def enumerate_df(df, column_name='enum'):
+    df[column_name] = 1
+    df[column_name] = df[column_name].cumsum()
+    return df
