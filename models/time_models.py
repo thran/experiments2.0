@@ -138,3 +138,6 @@ class BasicTimeModel(Model):
 
         self.skill[student] += self._K * dif
         self.student_attempts[student] += 1
+
+    def get_skills(self, students):
+        return [self.skill[s] for s in students]
