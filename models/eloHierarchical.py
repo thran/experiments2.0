@@ -65,8 +65,8 @@ class EloHierarchicalModel(Model):
             skill = self.skill_parents[skill]
         return skills[::-1]
 
-    def get_skills(self, students):
-        return [self.skill[1][s] for s in students]
+    def get_skill(self, student):
+        return self.skill[1][student]
 
-    def get_difficulties(self, items):
-        return [self.difficulty[i] for i in items]
+    def get_difficulty(self, item):
+        return self.difficulty[item]

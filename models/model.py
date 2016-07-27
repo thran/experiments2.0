@@ -58,6 +58,18 @@ class Model:
     def update(self, student, item, prediction, time_prediction, correct, response_time, extra):
         pass
 
+    def get_skills(self, students):
+        return [self.get_skill(s) for s in students]
+
+    def get_difficulties(self, items):
+        return [self.get_difficulty(i) for i in items]
+
+    def get_skill(self, student):
+        return None
+
+    def get_difficulty(self, item):
+        return None
+
 
 class AvgModel(Model):
     def __init__(self, init_avg=0.5):
@@ -109,6 +121,9 @@ class ItemAvgModel(Model):
     def post_process_data(self, data):
         self.difficulty = pd.Series(self.corrects) / pd.Series(self.counts)
 
+    def get_difficulty(self, item):
+        return 1 - (self.corrects[item] / self.counts[item] if self.counts[item] > 0 else self._avg)
+
 
 class StudentAvgModel(Model):
     def __init__(self, init_avg=0.5):
@@ -137,3 +152,5 @@ class StudentAvgModel(Model):
     def post_process_data(self, data):
         self.difficulty = pd.Series(self.corrects) / pd.Series(self.counts)
 
+        def get_skill(self, student):
+            return self.corrects[student] / self.counts[student] if self.counts[student] > 0 else self._avg

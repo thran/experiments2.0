@@ -50,7 +50,7 @@ def learning(data, length=99, measures=None):
     points = range(1, length + 1)
 
     plt.subplot(1 + len(measures), 1, 1)
-    plt.bar(points, [(data['enum'] == p).sum() for p in points])
+    plt.bar(points[:-1], [(data['enum'] == p).sum() for p in points[:-1]])
     plt.ylabel('User count')
     for i, measure in enumerate(measures):
         plt.subplot(1 + len(measures), 1, i + 2)

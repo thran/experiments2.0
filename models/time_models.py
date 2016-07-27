@@ -79,6 +79,8 @@ class TimeStudentAvgModel(Model):
         self._counts[student] += 1
         self._log_avgs[student] += (math.log(response_time) - self._log_avgs[student]) / self._counts[student]
 
+    def get_skill(self, student):
+        return - self._log_avgs[student]
 
 
 class TimeItemAvgModel(Model):
@@ -103,6 +105,9 @@ class TimeItemAvgModel(Model):
         self._log_avg += (math.log(response_time) - self._log_avg) / self._count
         self._counts[item] += 1
         self._log_avgs[item] += (math.log(response_time) - self._log_avgs[item]) / self._counts[item]
+
+    def get_difficulty(self, item):
+        return self._log_avgs[item]
 
 
 class BasicTimeModel(Model):
@@ -139,5 +144,5 @@ class BasicTimeModel(Model):
         self.skill[student] += self._K * dif
         self.student_attempts[student] += 1
 
-    def get_skills(self, students):
-        return [self.skill[s] for s in students]
+    def get_skill(self, student):
+        return self.skill[student]
