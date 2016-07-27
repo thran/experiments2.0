@@ -33,13 +33,13 @@ def grid_search_AB():
                 }, plot_axes=['alpha', 'beta'], time=True,
                 )
 
-def skill_vs_fastness(prediction_mode, time_model, data):
+def skill_vs_speed(prediction_mode, time_model, data):
     model = TimeCombiner(prediction_mode, time_model)
     Evaluator(data, model).get_report(force_run=True)
     students = data.get_students()
     skills = prediction_mode.get_skills(students)
     fastness = time_model.get_skills(students)
-    sns.jointplot(pd.Series(skills), pd.Series(fastness), kind='kde', space=0).set_axis_labels("skill", "fastness")
+    sns.jointplot(pd.Series(skills), pd.Series(fastness), kind='kde', space=0).set_axis_labels("skill", "speed")
 
 
 compare_models(data, [
@@ -49,10 +49,10 @@ compare_models(data, [
     TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
 ], dont=1)
 
-skill_vs_fastness(
+skill_vs_speed(
     EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02),
     BasicTimeModel(alpha=0.6, beta=0.1, K=0.25),
-    data_long
+    data
 )
 
 
