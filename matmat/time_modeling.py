@@ -70,11 +70,12 @@ compare_models(data, [
     TimeCombiner(ItemAvgModel(), TimeItemAvgModel()),
     TimeCombiner(StudentAvgModel(), TimeStudentAvgModel()),
     TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
-], dont=1)
+    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25, floating_start=False)),
+], dont=0)
 
 
-learning(data.get_dataframe_all().join(pd.read_csv('../data/matmat/2016-06-27/items.csv'), on='item', rsuffix='_item'),
-         measures=['correct', 'response_time', 'response_time_log'])
+# learning(data.get_dataframe_all().join(pd.read_csv('../data/matmat/2016-06-27/items.csv'), on='item', rsuffix='_item'),
+#          measures=['correct', 'response_time', 'response_time_log'])
 
 
 # skill_vs_speed(
