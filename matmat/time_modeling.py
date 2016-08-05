@@ -3,7 +3,8 @@ import pandas as pd
 import seaborn as sns
 from models.eloHierarchical import EloHierarchicalModel
 from models.model import ItemAvgModel, StudentAvgModel, AvgModel
-from models.time_models import TimeAvgModel, TimeCombiner, TimeStudentAvgModel, TimeItemAvgModel, BasicTimeModel
+from models.time_models import TimeAvgModel, TimeCombiner, TimeStudentAvgModel, TimeItemAvgModel, BasicTimeModel, \
+    TimeEloHierarchicalModel
 from utils import data as d
 from utils.evaluator import Evaluator
 import matplotlib.pylab as plt
@@ -19,11 +20,27 @@ def grid_search_K():
                 plot_axes='K', time=True,
                 )
 
+def grid_search_Ks():
+    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeEloHierarchicalModel(**kwargs)),
+                {"alpha": 1.0, "beta": 0.1},
+                {"KC": np.arange(0.025, 0.2, 0.025),"KI": np.arange(0.025, 0.2, 0.025)},
+                plot_axes=['KI', 'KC'], time=True,
+                )
+
 
 def grid_search_AB():
     grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), BasicTimeModel(**kwargs)),
                 {"K": 0.25}, {
                     "alpha": np.arange(0.4, 1.3, 0.2),
+                    "beta": np.arange(0.06, 0.2, 0.02),
+                }, plot_axes=['alpha', 'beta'], time=True,
+                )
+
+
+def grid_search_AB2():
+    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeEloHierarchicalModel(**kwargs)),
+                {"KI": 0.1, 'KC': 0.075}, {
+                    "alpha": np.arange(0.6, 1.3, 0.2),
                     "beta": np.arange(0.06, 0.2, 0.02),
                 }, plot_axes=['alpha', 'beta'], time=True,
                 )
@@ -70,7 +87,7 @@ compare_models(data, [
     TimeCombiner(ItemAvgModel(), TimeItemAvgModel()),
     TimeCombiner(StudentAvgModel(), TimeStudentAvgModel()),
     TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
-    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25, floating_start=False)),
+    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), TimeEloHierarchicalModel()),
 ], dont=0)
 
 
@@ -86,12 +103,14 @@ compare_models(data, [
 
 
 # grid_search_K()
+# grid_search_Ks()
 # grid_search_AB()
+# grid_search_AB2()
 
 
-# model = TimeCombiner(ItemAvgModel(), TimeStudentAvgModel())
+# model = TimeCombiner(ItemAvgModel(), TimeEloHierarchicalModel())
 # Evaluator(data, model).get_report(force_run=True)
-# Evaluator(data, model).brier_graphs()
+# Evaluator(data, model).brier_graphs(time=True)
 # Evaluator(data, TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25))).brier_graphs(time=True)
 # Evaluator(data, model).brier_graphs(time_raw=True)
 plt.show()

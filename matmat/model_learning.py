@@ -25,9 +25,14 @@ def model_learning(prediction_model, time_model, data, length=200):
         skill = model._prediction_model.get_skill(student)
         speed = model._time_model.get_skill(student)
         enums[student] += 1
-        df.append([item, student, skill, speed, enums[student], answer["correct"], np.log(answer["response_time"]), prediction, np.log(time_prediction)])
+        df.append([item, student, skill, speed, enums[student],
+                   answer["correct"], np.log(answer["response_time"]),
+                   prediction, np.log(time_prediction),
+                   model._prediction_model.get_difficulty(item),
+                   model._time_model.get_difficulty(item),
+                   ])
 
-    df = pd.DataFrame(df, columns=('item', 'student', 'skill', 'speed', 'enum', 'correct', 'response_time_log', 'prediction', 'time_prediction_log'))
+    df = pd.DataFrame(df, columns=('item', 'student', 'skill', 'speed', 'enum', 'correct', 'response_time_log', 'prediction', 'time_prediction_log', 'difficulty', 'intensity'))
 
     points = range(1, length + 1)
     plt.subplot(321)
@@ -57,9 +62,13 @@ def model_learning(prediction_model, time_model, data, length=200):
     plt.xlabel('# answer')
     plt.ylabel('time')
     plt.subplot(326)
-    plt.bar(points[:-1], [(df['enum'] == p).sum() for p in points[:-1]])
-    plt.ylabel('User count')
+    plt.plot(points, [df.loc[df['enum'] == p, 'intensity'].mean() for p in points])
+    plt.ylabel('Intensity')
+    # plt.plot(points, [df.loc[df['enum'] == p, 'difficulty'].mean() for p in points])
+    # plt.ylabel('Difficulty')
     plt.xlabel('# answer')
+
+    df.to_pickle('model_learning.pd')
 
     return df
 
@@ -74,6 +83,7 @@ data_long.trim_times()
 model_learning(
     EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02),
     BasicTimeModel(alpha=0.6, beta=0.1, K=0.25),
+    # TimeItemAvgModel(),
     data
 )
 
