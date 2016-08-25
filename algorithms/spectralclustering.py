@@ -18,7 +18,7 @@ class SpectralClusterer:
         self.corr = np.copy(corr)
 
         if (self.corr.shape[0]!=self.corr.shape[1]):
-            raise ValueError("Data metrix", "Data metrix must be square, but shape is "+str(data.shape))
+            raise ValueError("Data metrix", "Data metrix must be square, but shape is "+str(self.corr.shape))
 
         self.W = self.corr
         self.point_number = self.corr.shape[0]
