@@ -154,8 +154,8 @@ class Data():
 
     def _filter_data(self, min_answers_per_item=100, min_answers_per_student=10):
         self._load_file()
-        self._data = self._data[self._data.join(pd.Series(self._data.groupby("student").apply(len), name="count"), on="student")["count"] > min_answers_per_student]
         self._data = self._data[self._data.join(pd.Series(self._data.groupby("item").apply(len), name="count"), on="item")["count"] > min_answers_per_item]
+        self._data = self._data[self._data.join(pd.Series(self._data.groupby("student").apply(len), name="count"), on="student")["count"] > min_answers_per_student]
 
     def only_first(self):
         if self._data is not None:
