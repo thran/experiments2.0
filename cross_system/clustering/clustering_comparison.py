@@ -17,13 +17,12 @@ items_cs = pd.read_pickle('../../data/umimecesky/2016-05-18/items.pd')
 
 
 def embeddings(answers, corr_method='corr'):
-    pivot = answers.pivot('student', 'item', 'correct')
     if corr_method == 'kappa':
-        corr = kappa(pivot)
+        corr = kappa(answers)
     elif corr_method == 'corrcorr':
-        corr = pivot.corr().corr()
+        vectorization_double_pearson(answers)
     else:
-        corr = pivot.corr()
+        vectorization_pearson(answers)
     items = corr.index
     distances = pd.DataFrame()
 

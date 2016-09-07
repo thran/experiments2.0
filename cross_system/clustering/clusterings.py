@@ -9,7 +9,18 @@ import matplotlib.pylab as plt
 colors = "rgbyk"
 
 
-def kappa(df, min_periods=1):
+def vectorization_pearson(answers):
+    pivot = answers.pivot('student', 'item', 'correct')
+    return pivot.corr()
+
+
+def vectorization_double_pearson(answers):
+    pivot = answers.pivot('student', 'item', 'correct')
+    return pivot.corr().corr()
+
+
+def kappa(answers, min_periods=1):
+    df = answers.pivot('student', 'item', 'correct')
     mat = df.as_matrix().T
     K = len(df.columns)
     correl = np.empty((K, K), dtype=float)
