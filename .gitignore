@@ -2,3 +2,4 @@
 *.csv
 cache/*
 !cross_system/**/*.csv
+*.RData
