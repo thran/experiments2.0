@@ -20,6 +20,9 @@ class SpectralClusterer:
         if (self.corr.shape[0]!=self.corr.shape[1]):
             raise ValueError("Data metrix", "Data metrix must be square, but shape is "+str(self.corr.shape))
 
+        if ((self.corr < 0).any()):
+            raise ValueError("Data metrix", "Data metrix con not contain negative values.")
+
         self.W = self.corr
         self.point_number = self.corr.shape[0]
         for i in range(self.point_number):
@@ -46,10 +49,10 @@ class SpectralClusterer:
         self.L = self.D - self.W
         if sc_type == 1:
             D2 = np.diag(1. / self.D.diagonal())
-            self.L = np.dot(D2,self.L)
+            self.L = np.dot(D2, self.L)
         if sc_type == 2:
             D2 = np.diag(self.D.diagonal() ** (-.5))
-            self.L = np.dot(D2,np.dot(self.L,D2))
+            self.L = np.dot(D2, np.dot(self.L, D2))
 
         self.eig_val, self.eig_vect = la.eig(self.L)
         self._sortEig()
