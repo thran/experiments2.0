@@ -7,6 +7,7 @@ from algorithms.spectralclustering import SpectralClusterer
 from sklearn.manifold import TSNE, MDS, Isomap
 import matplotlib.pylab as plt
 colors = "rgbyk"
+markers = "o^s*+x"
 
 
 def remove_nans(df):
@@ -56,9 +57,10 @@ def kappa(answers, min_periods=10):
 
 
 def spectral_clustering(X, clusters=2):
+    X[X < 0] = 0
     sc = SpectralClusterer(X, kcut=X.shape[0] / 2, mutual=True)
 
-    labels = sc.run(cluster_number=2, KMiter=50, sc_type=2)
+    labels = sc.run(cluster_number=clusters, KMiter=50, sc_type=2)
     return (sc.eig_vect[:, 1], sc.eig_vect[:, 2]), labels
 
 
@@ -90,7 +92,10 @@ def mds(X, clusters=2):
     return result.T, None
 
 
-def plot_clustering(items, xs, ys, labels, texts):
-    for item, x, y, label, text in zip(items, xs, ys, labels, texts):
-        plt.plot(x, y, "o", color=colors[label])
+def plot_clustering(items, xs, ys, labels=None, texts=None, shapes=None):
+    labels = [0] * len(xs) if labels is None else labels
+    texts = [""] * len(xs) if texts is None else texts
+    shapes = [0] * len(xs) if shapes is None else shapes
+    for item, x, y, label, text, shape in zip(items, xs, ys, labels, texts, shapes):
+        plt.plot(x, y, markers[shape], color=colors[label])
         plt.text(x, y, text)
