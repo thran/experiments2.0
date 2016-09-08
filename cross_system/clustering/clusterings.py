@@ -9,17 +9,26 @@ import matplotlib.pylab as plt
 colors = "rgbyk"
 
 
+def remove_nans(df):
+    filter = np.isnan(df).sum() < len(df) / 2
+    df = df.loc[filter, filter]
+    while np.isnan(df).sum().sum() > 0:
+        worst = np.isnan(df).sum().argmax()
+        df = df.loc[df.index != worst, df.index != worst]
+    return df
+
+
 def vectorization_pearson(answers):
     pivot = answers.pivot('student', 'item', 'correct')
-    return pivot.corr()
+    return remove_nans(pivot.corr(min_periods=10))
 
 
 def vectorization_double_pearson(answers):
     pivot = answers.pivot('student', 'item', 'correct')
-    return pivot.corr().corr()
+    return remove_nans(remove_nans(pivot.corr(min_periods=10)).corr())
 
 
-def kappa(answers, min_periods=1):
+def kappa(answers, min_periods=10):
     df = answers.pivot('student', 'item', 'correct')
     mat = df.as_matrix().T
     K = len(df.columns)
@@ -41,8 +50,9 @@ def kappa(answers, min_periods=1):
                 c = kappa_metric(ac, bc)
             correl[i, j] = c
             correl[j, i] = c
+    # correl[correl == 0] = np.nan
 
-    return pd.DataFrame(correl, index=df.columns, columns=df.columns)
+    return remove_nans(pd.DataFrame(correl, index=df.columns, columns=df.columns))
 
 
 def spectral_clustering(X, clusters=2):

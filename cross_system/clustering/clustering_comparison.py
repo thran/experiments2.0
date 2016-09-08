@@ -1,10 +1,8 @@
-from collections import defaultdict
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist
 import matplotlib.pylab as plt
 import seaborn as sns
-from algorithms.spectralclustering import SpectralClusterer
 from cross_system.clustering.clusterings import *
 
 colors = "rgbyk"
@@ -20,9 +18,9 @@ def embeddings(answers, corr_method='corr'):
     if corr_method == 'kappa':
         corr = kappa(answers)
     elif corr_method == 'corrcorr':
-        vectorization_double_pearson(answers)
+        corr = vectorization_double_pearson(answers)
     else:
-        vectorization_pearson(answers)
+        corr = vectorization_pearson(answers)
     items = corr.index
     distances = pd.DataFrame()
 
