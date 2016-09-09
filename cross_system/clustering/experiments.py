@@ -15,10 +15,10 @@ items = items[items['visualization'] != 'pairing']
 n_clusters = 3
 
 # print(items['skill_lvl_1'].unique()) # [  2  26 151 209 367]
-# items = items[items['skill_lvl_1'] == 2]
+items = items[items['skill_lvl_1'] == 2]
 # items = items[items['skill_lvl_2'] == 27]
 # items = items[items['skill_lvl_2'] == 210]
-items = items[items['skill_lvl_2'] == 152]
+# items = items[items['skill_lvl_2'] == 152]
 visualizations = list(items['visualization'].unique())
 answers = answers[answers['item'].isin(items.index)]
 kmeans = KMeans(n_clusters=n_clusters)
@@ -28,7 +28,7 @@ kmeans = KMeans(n_clusters=n_clusters)
 modificator = LinearDrop(14)
 answers = modificator.modify(answers)
 
-X = vectorization_double_pearson(answers)
+X = similarity_double_pearson(answers)
 clusters = kmeans.fit_predict(X)
 
 

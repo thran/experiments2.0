@@ -1,10 +1,11 @@
-from skll.metrics import kappa as kappa_metric
+from skll.metrics import kappa
 
 import numpy as np
 import pandas as pd
 from sklearn.decomposition import PCA
 from algorithms.spectralclustering import SpectralClusterer
 from sklearn.manifold import TSNE, MDS, Isomap
+from scipy.spatial.distance import cosine, euclidean
 import matplotlib.pylab as plt
 colors = "rgbyk"
 markers = "o^s*+x"
@@ -19,22 +20,12 @@ def remove_nans(df):
     return df
 
 
-def vectorization_pearson(answers):
-    pivot = answers.pivot('student', 'item', 'correct')
-    return remove_nans(pivot.corr(min_periods=10))
-
-
-def vectorization_double_pearson(answers):
-    pivot = answers.pivot('student', 'item', 'correct')
-    return remove_nans(remove_nans(pivot.corr(min_periods=10)).corr())
-
-
-def kappa(answers, min_periods=10):
-    df = answers.pivot('student', 'item', 'correct')
+def pairwise_metric(df, metric, min_periods=1):
     mat = df.as_matrix().T
     K = len(df.columns)
-    correl = np.empty((K, K), dtype=float)
+    met = np.empty((K, K), dtype=float)
     mask = np.isfinite(mat)
+
     for i, ac in enumerate(mat):
         for j, bc in enumerate(mat):
             if i > j:
@@ -46,14 +37,40 @@ def kappa(answers, min_periods=10):
             elif i == j:
                 c = 1.
             elif not valid.all():
-                c = kappa_metric(ac[valid], bc[valid])
+                c = kappa(ac[valid], bc[valid])
             else:
-                c = kappa_metric(ac, bc)
-            correl[i, j] = c
-            correl[j, i] = c
-    # correl[correl == 0] = np.nan
+                c = kappa(ac, bc)
+            met[i, j] = c
+            met[j, i] = c
+    return remove_nans(pd.DataFrame(met, index=df.columns, columns=df.columns))
 
-    return remove_nans(pd.DataFrame(correl, index=df.columns, columns=df.columns))
+
+def similarity_pearson(data):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return remove_nans(data.corr())
+
+
+def similarity_kappa(data):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, kappa)
+
+
+def similarity_cosine(data):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, cosine)
+
+
+def similarity_euclidean(data):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, euclidean)
+
+
+def similarity_double_pearson(answers):
+    return similarity_pearson(similarity_pearson(answers))
 
 
 def spectral_clustering(X, clusters=2):
