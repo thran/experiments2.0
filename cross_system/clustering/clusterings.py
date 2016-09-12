@@ -7,8 +7,22 @@ from algorithms.spectralclustering import SpectralClusterer
 from sklearn.manifold import TSNE, MDS, Isomap
 from scipy.spatial.distance import cosine, euclidean
 import matplotlib.pylab as plt
+
+from utils.utils import cache_pandas
+
 colors = "rgbyk"
-markers = "o^s*+x"
+markers = "o^s*vx"
+
+
+def yulesQ(x, y):
+    a = ((x==1) & (y==1)).sum()
+    b = ((x==1) & (y==0)).sum()
+    c = ((x==0) & (y==1)).sum()
+    d = ((x==0) & (y==0)).sum()
+
+    OR = (a * d) / (b * c)
+    return (OR - 1) / (OR + 1)
+
 
 
 def remove_nans(df):
@@ -37,36 +51,46 @@ def pairwise_metric(df, metric, min_periods=1):
             elif i == j:
                 c = 1.
             elif not valid.all():
-                c = kappa(ac[valid], bc[valid])
+                c = metric(ac[valid], bc[valid])
             else:
-                c = kappa(ac, bc)
+                c = metric(ac, bc)
             met[i, j] = c
             met[j, i] = c
     return remove_nans(pd.DataFrame(met, index=df.columns, columns=df.columns))
 
-
-def similarity_pearson(data):
+@cache_pandas
+def similarity_pearson(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return remove_nans(data.corr())
 
 
-def similarity_kappa(data):
+@cache_pandas
+def similarity_kappa(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, kappa)
 
 
-def similarity_cosine(data):
+@cache_pandas
+def similarity_cosine(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, cosine)
 
 
-def similarity_euclidean(data):
+@cache_pandas
+def similarity_euclidean(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, euclidean)
+
+
+@cache_pandas
+def similarity_yulesQ(data, cache=None):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, yulesQ)
 
 
 def similarity_double_pearson(answers):
@@ -88,8 +112,8 @@ def tsne(X, clusters=2):
     return result.T, None
 
 
-def pca(X, clusters=2):
-    model = PCA(n_components=2)
+def pca(X, clusters=2, n_components=2):
+    model = PCA(n_components=n_components)
     result = model.fit_transform(X)
 
     return result.T, None

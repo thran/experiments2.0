@@ -1,5 +1,6 @@
+import os
 from itertools import product
-from functools import reduce
+from functools import reduce, wraps
 from utils import  evaluator
 import pandas as pd
 import seaborn as sns
@@ -41,3 +42,24 @@ def enumerate_df(df, column_name='enum'):
     df[column_name] = 1
     df[column_name] = df[column_name].cumsum()
     return df
+
+
+def cache_pandas(f, cache_name_var='cache', dir='cache'):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if cache_name_var not in kwargs:
+            return f(*args, **kwargs)
+
+        filename = os.path.join(dir, f.__name__ + '-' + kwargs[cache_name_var] + '.pd')
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        if os.path.exists(filename):
+            # print("read", filename)
+            return pd.read_pickle(filename)
+
+        value = f(*args, **kwargs)
+        value.to_pickle(filename)
+        # print("write", filename)
+        return value
+
+    return wrapper

@@ -9,83 +9,131 @@ import matplotlib.lines as mlines
 
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
-n_clusters = 5
-answers = None
-items = None
-true_cluster_names = None
-gt_column = None
-# MATMAT
-if True:
-    answers = pd.read_pickle('../../data/matmat/2016-06-27/answers.pd')
-    answers = answers.groupby(['student', 'item']).first().reset_index()
-    items = pd.read_csv('../../data/matmat/2016-06-27/items.csv', index_col='id')
-    items = items[items['visualization'] != 'pairing']
-    items = items[items['skill_lvl_1'] == 2]
-    gt_column = 'visualization'
-
-    true_cluster_names = list(items['visualization'].unique())
-    answers = answers[answers['item'].isin(items.index)]
+# data_set, n_clusters  = 'matmat-numbers', 3
+# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+# data_set, n_clusters  = 'simulated-s250-c2-i20', 2
+data_set, n_clusters  = 'math_garden-all', 3
+# data_set, n_clusters = 'cestina-B', 2
+# data_set, n_clusters = 'cestina-L', 2
+# data_set, n_clusters = 'cestina-Z', 2
+answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
+items = pd.read_pickle('data/{}-items.pd'.format(data_set))
+true_cluster_names = list(items['concept'].unique())
 
 kmeans = KMeans(n_clusters=n_clusters, n_init=100, max_iter=1000)
 
-# modificator = BinaryResponse()
+modificator = BinaryResponse()
 # modificator = TimeLimitResponseModificator([(5, 0.5)])
-modificator = LinearDrop(14)
+# modificator = LinearDrop(14)
 answers = modificator.modify(answers)
 
-projection = pca
+projection = tsne
 
 
 plt.figure(figsize=(16, 24))
-similarities, similarities_names = [], ['ground_truth']
-for g in [None, similarity_pearson]:
-    for f in [similarity_pearson, similarity_cosine, similarity_kappa, similarity_euclidean]:
+plt.suptitle('{} - {}'.format(data_set, modificator))
+similarities, similarities_names = [], []
+
+# for f in [similarity_yulesQ, similarity_pearson, similarity_kappa, similarity_euclidean, similarity_cosine]:
+for f in [similarity_pearson, similarity_euclidean, similarity_cosine]:
+    for g in [None, similarity_pearson]:
         if f is None:
             continue
         if g is not None:
-            similarities.append(lambda x, g=g, f=f: g(f(x)))
+            similarities.append(lambda x, g=g, f=f: g(f(x, cache=data_set + str(modificator))))
             similarities_names.append("{} -> {}".format(f.__name__.replace('similarity_', ''), g.__name__.replace('similarity_', '')))
         else:
-            similarities.append(lambda x, f=f: f(x))
+            similarities.append(lambda x, f=f: f(x, cache=data_set + str(modificator)))
             similarities_names.append(f.__name__.replace('similarity_', ''))
 
 
-clusters = []
-for i, similarity in enumerate(similarities):
-    print(similarities_names[i])
-    X = similarity(answers)
-    labels = kmeans.fit_predict(X)
-    clusters.append(labels)
+if False:
+    clusters = []
+    for i, similarity in enumerate(similarities):
+        print(similarities_names[i])
+        X = similarity(answers)
+        labels = kmeans.fit_predict(X)
+        clusters.append(labels)
 
-    items_ids = X.index
-    (xs, ys), _ = projection(X, clusters=n_clusters)
-    ground_truth = [true_cluster_names.index(items.get_value(item, gt_column)) for item in items_ids]
+        items_ids = X.index
+        (xs, ys), _ = projection(X, clusters=n_clusters)
+        ground_truth = [true_cluster_names.index(items.get_value(item, 'concept')) for item in items_ids]
 
-    plt.subplot(2, len(similarities) / 2 + 1, i + 1)
-    plt.title(similarities_names[i+1])
-    plot_clustering(
-        items_ids, xs, ys,
-        labels=labels,
-        texts=[items.get_value(item, 'question') for item in items_ids],
-        shapes=ground_truth,
-    )
+        plt.subplot(2, len(similarities) / 2 + 1, i + 1)
+        plt.title(similarities_names[i])
+        plot_clustering(
+            items_ids, xs, ys,
+            labels=labels,
+            texts=[items.get_value(item, 'name') for item in items_ids],
+            shapes=ground_truth,
+        )
 
-plt.legend(handles=[
-    mlines.Line2D([], [], color='black', linewidth=0, marker=markers[i], label=v)
-    for i, v in enumerate(true_cluster_names)
+    plt.legend(handles=[
+        mlines.Line2D([], [], color='black', linewidth=0, marker=markers[i], label=v)
+        for i, v in enumerate(true_cluster_names)
+        ])
+
+
+    plt.subplot(2, len(similarities) / 2 + 1, len(similarities) + 1)
+    rands = []
+    for c1 in [ground_truth] + clusters:
+        l = []
+        for c2 in [ground_truth] + clusters:
+            l.append(rand_index(c1, c2))
+        rands.append(l)
+
+    sns.heatmap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
+    plt.title(data_set)
+    sns.clustermap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
+
+
+if True:
+    for i, (similarity, similarities_name) in enumerate(zip(similarities, similarities_names)):
+        print(similarities_name)
+        X = similarity(answers)
+        ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
+        same, different = [], []
+        for concept1 in set(ground_truth):
+            for concept2 in set(ground_truth):
+                values = list(X.loc[ground_truth == concept1, ground_truth == concept2].values.flatten())
+                if concept1 == concept2:
+                    same += values
+                elif concept1 > concept2:
+                    different += values
+
+
+        plt.subplot(len(similarities) // 2, 4, i + 1 + i // 2 * 2)
+        plt.title(similarities_name)
+        sns.distplot(same)
+        sns.distplot(different)
+        if similarities_name != 'euclidean':
+            plt.xlim([-1,1])
+
+        if i % 2 == 1:
+            predict = kmeans.fit_predict(X)
+            plt.subplot(len(similarities) // 2, 4, i + 2 + i // 2 * 2)
+            (xs, ys), _ = tsne(X, clusters=n_clusters)
+            plot_clustering(
+                X.index, xs, ys,
+                labels=predict,
+                # texts=[items.get_value(item, 'name') for item in X.index],
+                texts=None,
+                shapes=ground_truth,
+            )
+
+            plt.subplot(len(similarities) // 2, 4, i + 3 + i // 2 * 2)
+            (xs, ys), _ = pca(X, clusters=n_clusters)
+            plot_clustering(
+                X.index, xs, ys,
+                labels=predict,
+                # texts=[items.get_value(item, 'name') for item in X.index],
+                shapes=ground_truth,
+            )
+
+    plt.legend(handles=[
+        mlines.Line2D([], [], color='black', linewidth=0, marker=markers[i], label=v)
+        for i, v in enumerate(true_cluster_names)
     ])
-
-
-plt.subplot(2, len(similarities) / 2 + 1, len(similarities) + 1)
-rands = []
-for c1 in [ground_truth] + clusters:
-    l = []
-    for c2 in [ground_truth] + clusters:
-        l.append(rand_index(c1, c2))
-    rands.append(l)
-
-sns.heatmap(rands, xticklabels=similarities_names, yticklabels=similarities_names, annot=True)
-sns.clustermap(rands, xticklabels=similarities_names, yticklabels=similarities_names, annot=True)
 
 
 # plt.savefig('results/tmp/matmat-{}-x.png'.format(modificator))

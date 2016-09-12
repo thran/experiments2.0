@@ -44,6 +44,7 @@ def cluster_concept(answers, concept=None):
     answers = answers.groupby(['user', 'word']).first().reset_index()
 
     corr = answers.pivot('user', 'word', 'correct').corr()
+    corr[corr < 0] = 0
     sc = SpectralClusterer(corr, kcut=corr.shape[0] / 2, mutual=True)
     # sc = SpectralClusterer(corr, kcut=30, mutual=True)
     labels = sc.run(cluster_number=2, KMiter=50, sc_type=2)
@@ -57,6 +58,6 @@ def cluster_concept(answers, concept=None):
         plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], word)
 
 
-answers = filter_users(answers)
+# answers = filter_users(answers)
 cluster_concept(answers, concept=1)
 plt.show()

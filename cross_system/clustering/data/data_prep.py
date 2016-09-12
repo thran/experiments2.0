@@ -39,7 +39,7 @@ def math_garden():
     items.to_pickle('math_garden-{}-items.pd'.format(concept))
 
 
-def cestina():
+def cestina(concept_id=1, concept_name='B'):
     answers = pd.read_csv('../../../data/umimecesky/2016-05-18/doplnovackaLog.csv', sep=';')
     questions = pd.read_csv('../../../data/umimecesky/2016-05-18/doplnovackaZadani.csv', sep=';', index_col='word')
     answers = answers.join(questions, on='word',rsuffix='_question')
@@ -53,24 +53,28 @@ def cestina():
     questions.loc[questions['variant2'] == questions['correct'], 'correct_variant'] = 1
     questions = questions.set_index(questions['id'])
 
-    questions = questions[questions['concept'] == 7]
+    questions = questions[questions['concept'] == concept_id]
 
-    items = questions.loc[:, ['solved', 'correct']].rename({'solved': 'name', 'correct': 'concept'})
+    items = questions.loc[:, ['solved', 'correct']].rename(columns={'solved': 'name', 'correct': 'concept'})
+    for f, t in (('í', 'i'), ('ý', 'y')):
+        items.loc[items['concept'] == f, 'concept'] = t
 
     answers = answers.rename(columns={'id': 'item', 'user': 'student'})
     answers = answers[answers['item'].isin(items.index)]
     answers['response_time'] = 0
     answers = answers.loc[:, ['student', 'item', 'response_time', 'correct']]
+    answers = answers.groupby(['student', 'item']).first().reset_index()
 
     print(items)
-    answers.to_pickle('cestina-Z-answers.pd')
-    items.to_pickle('cestina-Z-items.pd')
+    answers.to_pickle('cestina-{}-answers.pd'.format(concept_name))
+    items.to_pickle('cestina-{}-items.pd'.format(concept_name))
 
 
 def math_garden_all():
     concepts = ['addition', 'subtraction', 'multiplication']
 
     answers = pd.concat([pd.read_pickle('math_garden-{}-answers.pd'.format(c)) for c in concepts])
+    answers = answers.set_index(np.arange(len(answers)))
     answers.to_pickle('math_garden-all-answers.pd')
     items = pd.concat([pd.read_pickle('math_garden-{}-items.pd'.format(c)) for c in concepts])
     items.to_pickle('math_garden-all-items.pd')
@@ -99,7 +103,9 @@ def simulated(n_students=100, n_concepts=5, n_items=20):
 
 # math_garden()
 # matmat()
-# math_garden_all()
-# cestina()
+math_garden_all()
+# cestina(7, 'Z')
+# cestina(1, 'B')
+# cestina(2, 'L')
 
-simulated()
+# simulated(n_students=250, n_concepts=2, n_items=20)
