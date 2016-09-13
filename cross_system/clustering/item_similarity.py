@@ -10,9 +10,11 @@ import matplotlib.lines as mlines
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
 # data_set, n_clusters  = 'matmat-numbers', 3
-# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+# data_set, n_clusters  = 'matmat-all', 4
+data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
-data_set, n_clusters  = 'math_garden-all', 3
+# data_set, n_clusters  = 'math_garden-all', 3
+# data_set, n_clusters  = 'math_garden-multiplication', 1
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
@@ -34,8 +36,8 @@ plt.figure(figsize=(16, 24))
 plt.suptitle('{} - {}'.format(data_set, modificator))
 similarities, similarities_names = [], []
 
-# for f in [similarity_yulesQ, similarity_pearson, similarity_kappa, similarity_euclidean, similarity_cosine]:
-for f in [similarity_pearson, similarity_euclidean, similarity_cosine]:
+for f in [similarity_yulesQ, similarity_pearson, similarity_kappa, similarity_euclidean, similarity_cosine]:
+# for f in [similarity_pearson, similarity_euclidean, similarity_cosine]:
     for g in [None, similarity_pearson]:
         if f is None:
             continue
@@ -102,14 +104,16 @@ if True:
                     different += values
 
 
-        plt.subplot(len(similarities) // 2, 4, i + 1 + i // 2 * 2)
+        # plt.subplot(len(similarities) // 2, 4, i + 1 + i // 2 * 2)
+        plt.subplot(len(similarities) // 2, 2, i + 1)
         plt.title(similarities_name)
         sns.distplot(same)
-        sns.distplot(different)
-        if similarities_name != 'euclidean':
+        if len(different):
+            sns.distplot(different)
+        if not similarities_name.endswith('euclidean'):
             plt.xlim([-1,1])
 
-        if i % 2 == 1:
+        if i % 2 == 1 and False:
             predict = kmeans.fit_predict(X)
             plt.subplot(len(similarities) // 2, 4, i + 2 + i // 2 * 2)
             (xs, ys), _ = tsne(X, clusters=n_clusters)
@@ -126,7 +130,7 @@ if True:
             plot_clustering(
                 X.index, xs, ys,
                 labels=predict,
-                # texts=[items.get_value(item, 'name') for item in X.index],
+                texts=[items.get_value(item, 'name') for item in X.index],
                 shapes=ground_truth,
             )
 
@@ -134,6 +138,31 @@ if True:
         mlines.Line2D([], [], color='black', linewidth=0, marker=markers[i], label=v)
         for i, v in enumerate(true_cluster_names)
     ])
+
+
+if False:
+    plt.figure(figsize=(8, 15))
+    plt.suptitle('{}'.format(data_set))
+    similarity = similarity_double_pearson
+
+    embeddings = [pca, isomap, mds, spectral_clustering, tsne]
+    for i, embedding in enumerate(embeddings):
+        X = similarity(answers)
+        ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
+        (xs, ys), _ = embedding(X)
+        plt.subplot(2, len(embeddings) // 2 + 1, i + 1)
+        plt.title(embedding.__name__)
+        plot_clustering(
+            X.index, xs, ys,
+            labels=ground_truth,
+            # texts=[items.get_value(item, 'name') for item in X.index],
+            shapes=None,
+        )
+
+
+    # plt.savefig('results/tmp/matmat-{}-x.png'.format(modificator))
+    plt.show()
+
 
 
 # plt.savefig('results/tmp/matmat-{}-x.png'.format(modificator))

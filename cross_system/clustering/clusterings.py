@@ -24,8 +24,11 @@ def yulesQ(x, y):
     return (OR - 1) / (OR + 1)
 
 
+def remove_nans(df, to_zero=False):
+    if to_zero:
+        df[np.isnan(df)] = 0
+        return df
 
-def remove_nans(df):
     filter = np.isnan(df).sum() < len(df) / 2
     df = df.loc[filter, filter]
     while np.isnan(df).sum().sum() > 0:
