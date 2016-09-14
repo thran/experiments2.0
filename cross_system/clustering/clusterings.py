@@ -1,139 +1,38 @@
-from skll.metrics import kappa
-
 import numpy as np
-import pandas as pd
-from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+
+from algorithms.kmean_precomputed import KMeanPrecomputed
 from algorithms.spectralclustering import SpectralClusterer
-from sklearn.manifold import TSNE, MDS, Isomap
-from scipy.spatial.distance import cosine, euclidean
 import matplotlib.pylab as plt
 
-from utils.utils import cache_pandas
 
 colors = "rgbyk"
 markers = "o^s*vx"
 
 
-def yulesQ(x, y):
-    a = ((x==1) & (y==1)).sum()
-    b = ((x==1) & (y==0)).sum()
-    c = ((x==0) & (y==1)).sum()
-    d = ((x==0) & (y==0)).sum()
-
-    OR = (a * d) / (b * c)
-    return (OR - 1) / (OR + 1)
-
-
-def remove_nans(df, to_zero=False):
-    if to_zero:
-        df[np.isnan(df)] = 0
-        return df
-
-    filter = np.isnan(df).sum() < len(df) / 2
-    df = df.loc[filter, filter]
-    while np.isnan(df).sum().sum() > 0:
-        worst = np.isnan(df).sum().argmax()
-        df = df.loc[df.index != worst, df.index != worst]
-    return df
-
-
-def pairwise_metric(df, metric, min_periods=1):
-    mat = df.as_matrix().T
-    K = len(df.columns)
-    met = np.empty((K, K), dtype=float)
-    mask = np.isfinite(mat)
-
-    for i, ac in enumerate(mat):
-        for j, bc in enumerate(mat):
-            if i > j:
-                continue
-
-            valid = mask[i] & mask[j]
-            if valid.sum() < min_periods:
-                c = np.nan
-            elif i == j:
-                c = 1.
-            elif not valid.all():
-                c = metric(ac[valid], bc[valid])
-            else:
-                c = metric(ac, bc)
-            met[i, j] = c
-            met[j, i] = c
-    return remove_nans(pd.DataFrame(met, index=df.columns, columns=df.columns))
-
-@cache_pandas
-def similarity_pearson(data, cache=None):
-    if 'student' in data.columns:
-        data = data.pivot('student', 'item', 'correct')
-    return remove_nans(data.corr())
-
-
-@cache_pandas
-def similarity_kappa(data, cache=None):
-    if 'student' in data.columns:
-        data = data.pivot('student', 'item', 'correct')
-    return pairwise_metric(data, kappa)
-
-
-@cache_pandas
-def similarity_cosine(data, cache=None):
-    if 'student' in data.columns:
-        data = data.pivot('student', 'item', 'correct')
-    return pairwise_metric(data, cosine)
-
-
-@cache_pandas
-def similarity_euclidean(data, cache=None):
-    if 'student' in data.columns:
-        data = data.pivot('student', 'item', 'correct')
-    return pairwise_metric(data, euclidean)
-
-
-@cache_pandas
-def similarity_yulesQ(data, cache=None):
-    if 'student' in data.columns:
-        data = data.pivot('student', 'item', 'correct')
-    return pairwise_metric(data, yulesQ)
-
-
-def similarity_double_pearson(answers):
-    return similarity_pearson(similarity_pearson(answers))
-
-
-def spectral_clustering(X, clusters=2):
+def spectral_clustering(X, concepts=2):
     X[X < 0] = 0
     sc = SpectralClusterer(X, kcut=X.shape[0] / 2, mutual=True)
-
-    labels = sc.run(cluster_number=clusters, KMiter=50, sc_type=2)
-    return (sc.eig_vect[:, 1], sc.eig_vect[:, 2]), labels
+    return sc.run(cluster_number=concepts, KMiter=50, sc_type=2)
 
 
-def tsne(X, clusters=2):
-    model = TSNE(learning_rate=300, n_iter=100000, init='pca')
-    result = model.fit_transform(X)
 
-    return result.T, None
-
-
-def pca(X, clusters=2, n_components=2):
-    model = PCA(n_components=n_components)
-    result = model.fit_transform(X)
-
-    return result.T, None
+def kmeans(X, concepts=2):
+    kmeans = KMeans(n_clusters=concepts, n_init=100, max_iter=1000)
+    return kmeans.fit_predict(X)
 
 
-def isomap(X, clusters=2):
-    model = Isomap(n_neighbors=15)
-    result = model.fit_transform(X)
-
-    return result.T, None
-
-
-def mds(X, clusters=2):
-    model = MDS(max_iter=1000)
-    result = model.fit_transform(X)
-
-    return result.T, None
+def kmeans_precomputed(X, concepts=2):
+    kmeans = KMeanPrecomputed(X)
+    best = np.inf
+    labels = None
+    for i in range(100):
+        l = kmeans.run(concepts)
+        cost = kmeans.cluster_cost()
+        if cost < best:
+            labels = l
+            best = cost
+    return labels
 
 
 def plot_clustering(items, xs, ys, labels=None, texts=None, shapes=None):
@@ -143,3 +42,5 @@ def plot_clustering(items, xs, ys, labels=None, texts=None, shapes=None):
     for item, x, y, label, text, shape in zip(items, xs, ys, labels, texts, shapes):
         plt.plot(x, y, markers[shape], color=colors[label])
         plt.text(x, y, text)
+
+
