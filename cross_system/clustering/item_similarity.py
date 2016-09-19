@@ -2,16 +2,19 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score as rand_index
 
+from cross_system.clustering.similarity import *
+from cross_system.clustering.projection import *
 from cross_system.clustering.clusterings import *
+import matplotlib.pylab as plt
 import pandas as pd
 import os
 import matplotlib.lines as mlines
 
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
-# data_set, n_clusters  = 'matmat-numbers', 3
+data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
-data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-multiplication', 1
@@ -38,7 +41,7 @@ similarities, similarities_names = [], []
 
 for f in [similarity_yulesQ, similarity_pearson, similarity_kappa, similarity_euclidean, similarity_cosine]:
 # for f in [similarity_pearson, similarity_euclidean, similarity_cosine]:
-    for g in [None, similarity_pearson]:
+    for g in [None, similarity_pearson, similarity_euclidean]:
         if f is None:
             continue
         if g is not None:
@@ -105,31 +108,35 @@ if True:
 
 
         # plt.subplot(len(similarities) // 2, 4, i + 1 + i // 2 * 2)
-        plt.subplot(len(similarities) // 2, 2, i + 1)
+        plt.subplot(len(similarities) // 3, 3, i + 1)
         plt.title(similarities_name)
-        sns.distplot(same)
-        if len(different):
-            sns.distplot(different)
         if not similarities_name.endswith('euclidean'):
             plt.xlim([-1,1])
+            sns.distplot(same)
+            if len(different):
+                sns.distplot(different)
+        else:
+            plt.xlim([-max(different), 0])
+            sns.distplot(-np.array(same))
+            if len(different):
+                sns.distplot(-np.array(different))
 
         if i % 2 == 1 and False:
-            predict = kmeans.fit_predict(X)
             plt.subplot(len(similarities) // 2, 4, i + 2 + i // 2 * 2)
-            (xs, ys), _ = tsne(X, clusters=n_clusters)
+            (xs, ys) = tsne(X)
             plot_clustering(
                 X.index, xs, ys,
-                labels=predict,
+                # labels=predict,
                 # texts=[items.get_value(item, 'name') for item in X.index],
                 texts=None,
                 shapes=ground_truth,
             )
 
             plt.subplot(len(similarities) // 2, 4, i + 3 + i // 2 * 2)
-            (xs, ys), _ = pca(X, clusters=n_clusters)
+            (xs, ys) = pca(X)
             plot_clustering(
                 X.index, xs, ys,
-                labels=predict,
+                # labels=predict,
                 texts=[items.get_value(item, 'name') for item in X.index],
                 shapes=ground_truth,
             )

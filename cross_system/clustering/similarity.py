@@ -16,7 +16,7 @@ def yulesQ(x, y):
     return (OR - 1) / (OR + 1)
 
 
-def remove_nans(df, to_zero=False):
+def remove_nans(df, to_zero=True):
     if to_zero:
         df[np.isnan(df)] = 0
         return df
@@ -29,7 +29,7 @@ def remove_nans(df, to_zero=False):
     return df
 
 
-def pairwise_metric(df, metric, min_periods=1):
+def pairwise_metric(df, metric, min_periods=1, prefect_fit=1.):
     mat = df.as_matrix().T
     K = len(df.columns)
     met = np.empty((K, K), dtype=float)
@@ -44,7 +44,7 @@ def pairwise_metric(df, metric, min_periods=1):
             if valid.sum() < min_periods:
                 c = np.nan
             elif i == j:
-                c = 1.
+                c = prefect_fit
             elif not valid.all():
                 c = metric(ac[valid], bc[valid])
             else:
@@ -79,7 +79,7 @@ def similarity_cosine(data, cache=None):
 def similarity_euclidean(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
-    return pairwise_metric(data, euclidean)
+    return pairwise_metric(data, euclidean, prefect_fit=0.)
 
 
 @cache_pandas

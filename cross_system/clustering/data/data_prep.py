@@ -125,4 +125,4 @@ def simulated(n_students=100, n_concepts=5, n_items=20):
 # cestina(1, 'B')
 # cestina(2, 'L')
 
-simulated(n_students=50, n_concepts=5, n_items=100)
+simulated(n_students=100, n_concepts=2, n_items=100)

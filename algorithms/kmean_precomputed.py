@@ -22,9 +22,7 @@ class KMeanPrecomputed:
         self.clusters_match()
         for i in range(max_iterations):
             self.clusters_move()
-            print(1, self.cluster_cost())
             self.clusters_match()
-            print(2, self.cluster_cost())
 
             self.cost = self.cluster_cost()
 
@@ -35,7 +33,7 @@ class KMeanPrecomputed:
         return self.nearest_centroids
 
     def clusters_init(self):
-        self.centroids = np.random.choice(self.point_count, self.cluster_count)
+        self.centroids = np.random.choice(self.point_count, self.cluster_count, replace=False)
         self.nearest_centroids = np.random.choice(self.cluster_count, self.point_count)
 
     def clusters_match(self):

@@ -250,6 +250,7 @@ class BinaryResponse(ResponseModificator):
         data.loc[data["correct"] > self._threshold, "correct"] = 1
         return data
 
+
 class TimeLimitResponseModificator(ResponseModificator):
     def __init__(self, limits=None):
         super().__init__()
@@ -285,6 +286,20 @@ class LinearDrop(ResponseModificator):
         data["correct2"] = data["correct"]
         data.loc[(data["response_time"] > self._max) & (data["correct"] > 0), "correct"] = 0
         data.loc[data["correct"] > 0, "correct"] = (self._max - data["response_time"]) / float(self._max)
+        return data
+
+
+class MathGardenResponseModificator(ResponseModificator):
+    def __init__(self, max=None):
+        super().__init__()
+        self._max = max
+        self._name = "MathGarden"
+
+    def modify(self, data):
+        data["correct2"] = data["correct"]
+        data.loc[data["correct2"] == 1, "correct"] = (self._max - data["response_time"]) / float(self._max)
+        data.loc[data["correct2"] == 0, "correct"] = -(self._max - data["response_time"]) / float(self._max)
+        data.loc[(data["response_time"] > self._max), "correct"] = 0
         return data
 
 
