@@ -22,10 +22,11 @@ def sample(answers, n=None, ratio=1):
 # data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s100-c2-i50', 2
 # data_set, n_clusters  = 'math_garden-all', 3
-data_set, n_clusters  = 'math_garden-multiplication', 1
+# data_set, n_clusters  = 'math_garden-multiplication', 1
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
+data_set, n_clusters = 'cestina-konc-prid', 7
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
 items = pd.read_pickle('data/{}-items.pd'.format(data_set))
 true_cluster_names = list(items['concept'].unique())

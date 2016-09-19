@@ -7,8 +7,8 @@ from algorithms.spectralclustering import SpectralClusterer
 import matplotlib.pylab as plt
 from cross_system.clustering.similarity import similarity_euclidean
 
-colors = "rgbyk"
-markers = "o^s*vx"
+colors = "rgbykcmw"
+markers = "o^s*vx+"
 
 
 def spectral_clustering(similarity, concepts=2, euclid=False):

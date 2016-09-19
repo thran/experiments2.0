@@ -12,7 +12,7 @@ import matplotlib.lines as mlines
 
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
-data_set, n_clusters  = 'matmat-numbers', 3
+# data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
 # data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
@@ -21,6 +21,7 @@ data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
+data_set, n_clusters = 'cestina-konc-prid', 7
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
 items = pd.read_pickle('data/{}-items.pd'.format(data_set))
 true_cluster_names = list(items['concept'].unique())
@@ -92,7 +93,7 @@ if False:
     sns.clustermap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
 
 
-if True:
+if False:
     for i, (similarity, similarities_name) in enumerate(zip(similarities, similarities_names)):
         print(similarities_name)
         X = similarity(answers)
@@ -147,16 +148,14 @@ if True:
     ])
 
 
-if False:
-    plt.figure(figsize=(8, 15))
-    plt.suptitle('{}'.format(data_set))
-    similarity = similarity_double_pearson
+if True:
+    similarity, euclid = similarity_pearson, True
 
-    embeddings = [pca, isomap, mds, spectral_clustering, tsne]
+    embeddings = [pca, isomap, mds, spectral, tsne]
     for i, embedding in enumerate(embeddings):
         X = similarity(answers)
         ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
-        (xs, ys), _ = embedding(X)
+        xs, ys = embedding(X, euclid=euclid)
         plt.subplot(2, len(embeddings) // 2 + 1, i + 1)
         plt.title(embedding.__name__)
         plot_clustering(
@@ -167,7 +166,10 @@ if False:
         )
 
 
-    # plt.savefig('results/tmp/matmat-{}-x.png'.format(modificator))
+    plt.legend(handles=[
+        mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[0], label=v)
+        for i, v in enumerate(true_cluster_names)
+    ])
     plt.show()
 
 
