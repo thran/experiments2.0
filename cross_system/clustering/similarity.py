@@ -16,6 +16,10 @@ def yulesQ(x, y):
     return (OR - 1) / (OR + 1)
 
 
+def links(x, y):
+    return (x & y).sum()
+
+
 def remove_nans(df, to_zero=True):
     if to_zero:
         df[np.isnan(df)] = 0
@@ -88,6 +92,9 @@ def similarity_yulesQ(data, cache=None):
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, yulesQ)
 
+
+def similarity_links(data, trash_hold=0.1):
+    return pairwise_metric(data > trash_hold, links)
 
 def similarity_double_pearson(answers):
     return similarity_pearson(similarity_pearson(answers))
