@@ -16,8 +16,7 @@ def data(n_students=100, n_concepts=5, n_items=15, difficulty_shift=0.5, skill_c
     skill_correlation_matrix = np.zeros((n_concepts, n_concepts))
     skill_correlation_matrix.fill(skill_correlation)
     np.fill_diagonal(skill_correlation_matrix, 1)
-    skill_correlation_matrix /= skill_correlation_matrix.sum(axis=1)
-    skill = np.dot(np.random.randn(n_students, n_concepts), skill_correlation_matrix)
+    skill = np.random.multivariate_normal(np.zeros(n_concepts), skill_correlation_matrix, n_students)
     items = np.array([[i,  i // n_items] for i in range(n_concepts * n_items)])
     difficulty = np.random.randn(len(items)) - difficulty_shift # shift to change overall difficulty
 
@@ -36,13 +35,22 @@ def data(n_students=100, n_concepts=5, n_items=15, difficulty_shift=0.5, skill_c
 
 
 similarities = [
-    # (lambda x: similarity_pearson(x), False, 'pearson'),
-    # (lambda x: similarity_yulesQ(x), False, 'yuleQ'),
-    (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
+    (lambda x: similarity_pearson(x), False, 'pearson'),
+    (lambda x: similarity_kappa(x), False, 'kappa'),
+    (lambda x: similarity_cosine(x), False, 'Ochiai'),
+    (lambda x: similarity_yulesQ(x), False, 'YulesQ'),
+    (lambda x: similarity_accuracy(x), False, 'accuracy'),
+    (lambda x: similarity_jaccard(x), False, 'Jaccard'),
+    # (lambda x: similarity_euclidean(x), False, 'euclid'),
+    # (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
     # (lambda x: similarity_links(similarity_pearson(x), 0.1), True, 'pearson -> links -> euclid'),
     # (lambda x: similarity_kappa(x), True, 'kappa -> euclid'),
     # (lambda x: similarity_yulesQ(x), True, 'yuleQ -> euclid'),
-    (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
+    # (lambda x: similarity_pearson(similarity_pearson(x)), False, 'pearson -> pearson'),
+    # (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'yuleQ -> pearson'),
+    # (lambda x: similarity_links(similarity_yulesQ(x)), False, 'yuleQ -> links'),
+    # (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
+    # (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'yuleQ -> pearson -> euclid'),
     # (lambda x: similarity_euclidean(similarity_pearson(x)), True, 'pearson -> euclid -> euclid'),
 ]
 clusterings = [
@@ -51,19 +59,19 @@ clusterings = [
     hierarchical
 ]
 
-similarity, euclid, similarity_name = similarities[1]
+similarity, euclid, similarity_name = similarities[0]
 n_clusters = 4
 n_students = 50
-skill_correlation = 0.3
+skill_correlation = 0.7
 difficulty_shift = 0.5
 clustering = kmeans
 missing = 0.
 
-runs = 10
-results = []
-if True:
+
+
+def students(runs=50):
+    results = []
     for run in range(runs):
-        print(run)
         for n_students in range(100, 1001, 100):
         # for n_students in [10, 25, 50, 100, 200, 300,  400, 600]:
         # for difficulty_shift in np.arange(-1, 1.1, 0.2):
@@ -78,30 +86,46 @@ if True:
                 labels = clustering(X, n_clusters, euclid=euclid)
                 rand = rand_index(ground_truth, labels)
                 results.append([n_students, clustering.__name__, rand, skill_correlation, difficulty_shift, similarity_name])
+                print(run, n_students, similarity_name, rand)
 
-if False:
+    results = pd.DataFrame(results, columns=['students', 'clustering', 'rand_index', 'skill_correlation', 'difficulty_shift', 'similarity'])
+    print(results)
+
+    plt.figure(figsize=(16, 24))
+    sns.pointplot(data=results, x='students', y='rand_index', hue='similarity')
+
+
+def skill_correlations(runs=10, n_clusters=5):
+    results = []
     clustering = kmeans
     for run in range(runs):
-        print(run)
-        for skill_correlation in np.arange(0, 1.1, 0.1):
-            print(skill_correlation)
-            for n_students in (100, 1000, 10000):
-                answers, items = data(n_students=n_students, n_concepts=n_clusters, skill_correlation=skill_correlation)
+        for skill_correlation in list(np.arange(0, 0.9, 0.1)) + [0.85]:
+            for clustering in clusterings:
+                for students in [10, 20, 30, 50, 100, 200, 300, 500, 1000, 2000, 3000, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000]:
+                    answers, items  = data(n_students=students, n_items=20, n_concepts=n_clusters, skill_correlation=skill_correlation)
+                    true_cluster_names = list(items['concept'].unique())
+                    X = similarity(answers)
+                    items_ids = X.index
+                    ground_truth = np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in items_ids])
 
-                true_cluster_names = list(items['concept'].unique())
-                X = similarity(answers)
-                items_ids = X.index
-                ground_truth = np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in items_ids])
+                    labels = clustering(X, n_clusters, euclid=euclid)
+                    rand = rand_index(ground_truth, labels)
 
-                labels = clustering(X, n_clusters, euclid=euclid)
-                rand = rand_index(ground_truth, labels)
-                results.append([n_students, clustering.__name__, rand, skill_correlation, difficulty_shift])
+                    print(run, skill_correlation, clustering.__name__, students, '===', rand)
+                    if rand >= 0.9:
+                        results.append([students, clustering.__name__, rand, skill_correlation])
+                        break
 
-results = pd.DataFrame(results, columns=['students', 'clustering', 'rand_index', 'skill_correlation', 'difficulty_shift', 'similarity'])
-print(results)
+    results = pd.DataFrame(results, columns=['students', 'clustering', 'rand_index', 'skill_correlation'])
 
-plt.figure(figsize=(16, 24))
-plt.title(similarity_name)
-sns.pointplot(data=results, x='students', y='rand_index', hue='similarity')
+    print(results)
+    f, ax = plt.subplots(figsize=(7, 7))
+    ax.set(yscale="log")
+    sns.pointplot(data=results, x='skill_correlation', y='students', hue='clustering', ax=ax)
+
+
+
+# skill_correlations()
+students()
 
 plt.show()

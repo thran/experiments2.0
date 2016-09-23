@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine, euclidean
 from skll.metrics import kappa
-
+import seaborn as sns
 from utils.utils import cache_pandas
+import matplotlib.pylab as plt
 
 
 def yulesQ(x, y):
@@ -14,6 +15,37 @@ def yulesQ(x, y):
 
     OR = (a * d) / (b * c)
     return (OR - 1) / (OR + 1)
+
+
+def accuracy(x, y):
+    a = ((x==1) & (y==1)).sum()
+    b = ((x==1) & (y==0)).sum()
+    c = ((x==0) & (y==1)).sum()
+    d = ((x==0) & (y==0)).sum()
+
+    return (a + d) / (a + b + c +d)
+
+
+def jaccard(x, y):
+    a = ((x==1) & (y==1)).sum()
+    b = ((x==1) & (y==0)).sum()
+    c = ((x==0) & (y==1)).sum()
+    d = ((x==0) & (y==0)).sum()
+
+    return (a) / (a + b + c)
+
+
+
+def kappa_own(x, y):
+    a = ((x==1) & (y==1)).sum()
+    b = ((x==1) & (y==0)).sum()
+    c = ((x==0) & (y==1)).sum()
+    d = ((x==0) & (y==0)).sum()
+    n = a + b + c + d
+    po = (a + d) / n
+    pe = ((a + b) * (a + c) + (b + d) * (c + d)) / (n ** 2)
+
+    return (po - pe) / (1 - pe)
 
 
 def links(x, y):
@@ -69,6 +101,13 @@ def similarity_pearson(data, cache=None):
 def similarity_kappa(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, kappa_own)
+
+
+@cache_pandas
+def similarity_kappa2(data, cache=None):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, kappa)
 
 
@@ -93,8 +132,49 @@ def similarity_yulesQ(data, cache=None):
     return pairwise_metric(data, yulesQ)
 
 
-def similarity_links(data, trash_hold=0.1):
+@cache_pandas
+def similarity_accuracy(data, cache=None):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, accuracy)
+
+
+@cache_pandas
+def similarity_jaccard(data, cache=None):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, jaccard)
+
+
+def similarity_links(data, trash_hold=None):
+    if trash_hold is None:
+        trash_hold = data.median()
     return pairwise_metric(data > trash_hold, links)
 
 def similarity_double_pearson(answers):
     return similarity_pearson(similarity_pearson(answers))
+
+def plot_similarity_hist(X, ground_truth, similarity_name):
+    same, different = [], []
+    for concept1 in set(ground_truth):
+        for concept2 in set(ground_truth):
+            values = list(X.loc[ground_truth == concept1, ground_truth == concept2].values.flatten())
+            if concept1 == concept2:
+                same += values
+            elif concept1 > concept2:
+                different += values
+
+    if similarity_name.endswith('links'):
+        sns.distplot(same)
+        if len(different):
+            sns.distplot(different)
+    elif not similarity_name.endswith('euclid'):
+        plt.xlim([-1,1])
+        sns.distplot(same)
+        if len(different):
+            sns.distplot(different)
+    else:
+        if len(different):
+            plt.xlim([-max(different), 0])
+            sns.distplot(-np.array(different))
+        sns.distplot(-np.array(same))

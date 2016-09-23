@@ -16,6 +16,15 @@ def spectral(similarity, euclid=False):
     return (sc.eig_vect[:, 1], sc.eig_vect[:, 2])
 
 
+def pca(similarity, n_components=2, euclid=False):
+    if not euclid:
+        print('podvod')
+    model = PCA(n_components=n_components)
+    result = model.fit_transform(similarity)
+
+    return result.T
+
+
 def tsne(similarity, euclid=False):
     if euclid:
         model = TSNE(learning_rate=300, n_iter=100000, init='random')
@@ -23,15 +32,6 @@ def tsne(similarity, euclid=False):
     else:
         model = TSNE(learning_rate=300, n_iter=100000, init='random', metric='precomputed')
         result = model.fit_transform(1 - similarity)
-
-    return result.T
-
-
-def pca(similarity, n_components=2, euclid=False):
-    if not euclid:
-        print('podvod')
-    model = PCA(n_components=n_components)
-    result = model.fit_transform(similarity)
 
     return result.T
 

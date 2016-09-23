@@ -1,63 +1,67 @@
-from collections import defaultdict
-
+import math
+import random
+import seaborn as sns
 import numpy as np
 import pandas as pd
-import matplotlib.pylab as plt
-import seaborn
+from cross_system.clustering.clusterings import *
+from cross_system.clustering.projection import *
+from cross_system.clustering.similarity import *
+from sklearn.metrics import adjusted_rand_score as rand_index
 
-from algorithms.spectralclustering import SpectralClusterer
+# data_set, n_clusters = 'cestina-B', 2
+# data_set, n_clusters = 'cestina-L', 2
+# data_set, n_clusters = 'cestina-Z', 2
+data_set, n_clusters = 'cestina-konc-prid', 7
+answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
+items = pd.read_pickle('data/{}-items.pd'.format(data_set))
+true_cluster_names = list(items['concept'].unique())
+n_clusters = len(true_cluster_names)
+print(true_cluster_names)
 
-answers = pd.read_csv('../../data/umimecesky/2016-05-18/doplnovackaLog.csv', sep=';')
-questions = pd.read_csv('../../data/umimecesky/2016-05-18/doplnovackaZadani.csv', sep=';', index_col='word')
-# answers = answers.join(questions, on='word',rsuffix='_question')
+similarities = [
+    (lambda x: similarity_pearson(x), False, 'pearson'),
+    # (lambda x: similarity_yulesQ(x), False, 'yuleQ'),
+    # (lambda x: similarity_kappa(x), False, 'kappa'),
+    # (lambda x: similarity_cosine(x), False, 'cosine'),
+    # (lambda x: similarity_euclidean(x), False, 'euclid'),
+    # (lambda x: similarity_kappa(x), True, 'kappa -> euclid'),
+    (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
+    # (lambda x: similarity_yulesQ(x), True, 'yuleQ -> euclid'),
+    (lambda x: similarity_pearson(similarity_pearson(x)), False, 'pearson -> pearson'),
+    # (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'yuleQ -> pearson'),
+    # (lambda x: similarity_links(similarity_yulesQ(x)), False, 'yuleQ -> links'),
+    (lambda x: similarity_links(similarity_pearson(x)), False, 'pearson -> links'),
+    (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
+    # (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'yuleQ -> pearson -> euclid'),
+    # (lambda x: similarity_euclidean(similarity_pearson(x)), True, 'pearson -> euclid -> euclid'),
+]
+clusterings = [
+    kmeans,
+    spectral_clustering2,
+    hierarchical
+]
 
-question_solutions = {}
-for question in questions.itertuples():
-    question_solutions[question[0]] = question[4] if question[0].replace('_', question[4]) == question[3] else question[5]
-    questions.loc[question[0], 'correct'] = question_solutions[question[0]]
+print(len(answers))
+clustering = hierarchical
 
-questions.loc[questions['variant1'] == questions['correct'], 'correct_variant'] = 0
-questions.loc[questions['variant2'] == questions['correct'], 'correct_variant'] = 1
+results = []
+for run in range(50):
+    for points in range(10000, 60001, 10000):
+        for similarity, euclid, similarity_name in similarities:
+            print(run, points, similarity_name)
+            X = similarity(answers.sample(n=points))
+            items_ids = X.index
+            ground_truth = np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in items_ids])
 
+            labels = clustering(X, n_clusters, euclid=euclid)
+            rand = rand_index(ground_truth, labels)
+            results.append([points, clustering.__name__, rand, similarity_name])
 
-def filter_users(answers):
-    answers = answers.join(questions, on='word',rsuffix='_question')
+results = pd.DataFrame(results, columns=['points', 'clustering', 'rand_index', 'similarity'])
+print(results)
 
-    bad_users = []
-
-    def user(df):
-        variants_1 = len(df[(df['correct'] == 1) ^ (df['correct_variant'] == 1)])
-        if variants_1 == 0 or variants_1 == len(df) or (
-            len(df) > 10 and (variants_1 <= 1 or variants_1 >= len(df) - 1)):
-            # print(df.iloc[0]['user'], variants_1, len(df) - variants_1)
-            bad_users.append(df.iloc[0]['user'])
-
-    answers.groupby(['user', 'concept']).apply(user)
-
-    return answers[~answers['user'].isin(bad_users)]
-
-
-def cluster_concept(answers, concept=None):
-    if concept is not None:
-        answers = answers[answers['concept'] == concept]
-
-    answers = answers.groupby(['user', 'word']).first().reset_index()
-
-    corr = answers.pivot('user', 'word', 'correct').corr()
-    corr[corr < 0] = 0
-    sc = SpectralClusterer(corr, kcut=corr.shape[0] / 2, mutual=True)
-    # sc = SpectralClusterer(corr, kcut=30, mutual=True)
-    labels = sc.run(cluster_number=2, KMiter=50, sc_type=2)
-
-    colors = "rgbyk"
-    for i, word in enumerate(corr.columns):
-        var = questions.get_value(word, 'correct_variant')
-        if type(var) == np.ndarray:
-            var = var[0]
-        plt.plot(sc.eig_vect[i, 1], sc.eig_vect[i, 2], "o", color=colors[int(var)])
-        plt.text(sc.eig_vect[i, 1], sc.eig_vect[i, 2], word)
+plt.figure(figsize=(16, 24))
+sns.pointplot(data=results, x='points', y='rand_index', hue='similarity')
 
 
-# answers = filter_users(answers)
-cluster_concept(answers, concept=1)
 plt.show()

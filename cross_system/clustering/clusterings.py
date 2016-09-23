@@ -36,7 +36,7 @@ def hierarchical(similarity, concepts=2, euclid=False):
         model = AgglomerativeClustering(n_clusters=concepts)
         return model.fit_predict(similarity)
     else:
-        model = AgglomerativeClustering(n_clusters=concepts, affinity='precomputed', linkage='average')
+        model = AgglomerativeClustering(n_clusters=concepts, affinity='precomputed', linkage='complete')
         return model.fit_predict(1 - similarity)
 
 

@@ -19,13 +19,13 @@ def sample(answers, n=None, ratio=1):
 
 # data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
-data_set, n_clusters  = 'simulated-s50-c5-i20', 5
+# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-addition', 1
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
-# data_set, n_clusters = 'cestina-Z', 2
+data_set, n_clusters = 'cestina-Z', 2
 # data_set, n_clusters = 'cestina-konc-prid', 2
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
 items = pd.read_pickle('data/{}-items.pd'.format(data_set))
@@ -34,48 +34,36 @@ print(true_cluster_names)
 # similarity = similarity_double_pearson
 similarities = [
     (lambda x: similarity_pearson(x), False, 'pearson'),
-    (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
-    (lambda x: similarity_pearson(similarity_pearson(x)), False, 'pearson -> pearson'),
-    (lambda x: similarity_links(similarity_pearson(x), 0.1), False, 'pearson -> 0.1 links'),
-    (lambda x: similarity_links(similarity_pearson(x), 0.05), False, 'pearson -> 0.05 links'),
-    (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
+    (lambda x: similarity_yulesQ(x), False, 'yulesq'),
+    (lambda x: similarity_kappa(x), False, 'kappa'),
+    (lambda x: similarity_cosine(x), False, 'cosine'),
+    (lambda x: similarity_euclidean(x), False, 'euclid'),
+    # (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
+    # (lambda x: similarity_pearson(similarity_pearson(x)), False, 'pearson -> pearson'),
+    # (lambda x: similarity_links(similarity_pearson(x), 0.1), False, 'pearson -> 0.1 links'),
+    # (lambda x: similarity_links(similarity_pearson(x), 0.05), False, 'pearson -> 0.05 links'),
+    # (lambda x: similarity_links(similarity_pearson(x)), False, 'pearson -> 0.05 links'),
+    # (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
 ]
 
 plt.figure(figsize=(16, 5))
 plt.suptitle(data_set)
+sim = pd.DataFrame()
 for i, (similarity, euclid, similarity_name) in enumerate(similarities):
     print(similarity_name)
     X = similarity(answers)
     if euclid:
         X = similarity_euclidean(X)
+    sim[similarity_name] = X.as_matrix().flatten()
     items_ids = X.index
     ground_truth = np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
-    same, different = [], []
-    for concept1 in set(ground_truth):
-        for concept2 in set(ground_truth):
-            values = list(X.loc[ground_truth == concept1, ground_truth == concept2].values.flatten())
-            if concept1 == concept2:
-                same += values
-            elif concept1 > concept2:
-                different += values
 
     plt.subplot(1, len(similarities), i + 1)
     plt.title(similarity_name)
-    if similarity_name.endswith('links'):
-        sns.distplot(same)
-        if len(different):
-            sns.distplot(different)
-    elif not euclid:
-        plt.xlim([-1,1])
-        sns.distplot(same)
-        if len(different):
-            sns.distplot(different)
-    else:
-        if len(different):
-            plt.xlim([-max(different), 0])
-            sns.distplot(-np.array(different))
-        sns.distplot(-np.array(same))
+    plot_similarity_hist(X, ground_truth, similarity_name)
 
 
+sns.pairplot(sim)
+print(sim.corr(method='spearman'))
 
 plt.show()
