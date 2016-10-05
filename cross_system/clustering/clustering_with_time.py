@@ -1,7 +1,7 @@
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score as rand_index
-
+from scipy.stats import pearsonr
 from cross_system.clustering.similarity import *
 from cross_system.clustering.clusterings import *
 from cross_system.clustering.projection import *
@@ -25,7 +25,6 @@ items = pd.read_pickle('data/{}-items.pd'.format(data_set))
 true_cluster_names = list(items['concept'].unique())
 
 median = np.round(np.median(answers['response_time']), 1)
-print(median)
 # modificators = [BinaryResponse(), TimeLimitResponseModificator([(median, 0.5)]), MathGardenResponseModificator(2 * median), LinearDrop(2 * median)]
 modificators = [BinaryResponse(), LinearDrop(2 * median)]
 
@@ -33,8 +32,44 @@ similarity, euclid = similarity_pearson, True
 projection = mds
 clustering = kmeans
 
+# answers = answers.loc[:67000, :]
+print(len(answers))
+
+if True:
+    plt.figure(figsize=(8, 8))
+    for i, modificator in enumerate(modificators):
+        print(modificator)
+        modified_answers = modificator.modify(answers.copy())
+        X = similarity(modified_answers)
+        xs, ys = projection(X, euclid=euclid)
+        ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
+
+        plt.subplot(2, len(modificators), i + 1)
+        plt.title(str(modificator))
+        plot_clustering(
+            X.index, xs, ys,
+            labels=3 + 1 * (np.array([int(items.get_value(item, 'name')) for item in X.index]) > 10),
+            texts=[items.get_value(item, 'name') for item in X.index],
+            # shapes=ground_truth,
+        )
+
+        plt.subplot(2, len(modificators), i + 3)
+        plt.title(str(modificator))
+        plot_clustering(
+            X.index, xs, ys,
+            labels=ground_truth,
+            texts=[items.get_value(item, 'name') for item in X.index],
+            # shapes=np.array([int(items.get_value(item, 'name')) for item in X.index]) > 10,
+        )
+
+
+    plt.legend(handles=[
+        mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[0], label=v)
+        for i, v in enumerate(true_cluster_names)
+        ])
+
 if False:
-# answers = answers.sample(n=20000)
+    # answers = answers.sample(n=20000)
     print(len(answers))
     data = pd.DataFrame()
     for modificator in modificators:
@@ -51,36 +86,42 @@ if False:
     g = sns.pairplot(data, diag_kind="kde")
     g.map_lower(sns.kdeplot, cmap="Blues_d")
 
-plt.figure(figsize=(8, 8))
-for i, modificator in enumerate(modificators):
-    print(modificator)
-    modified_answers = modificator.modify(answers.copy())
-    X = similarity(modified_answers)
-    xs, ys = projection(X, euclid=euclid)
-    ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
+if False:
+    results = []
+    truths = {}
+    s = None
+    for modificator in modificators:
+        modified_answers = modificator.modify(answers.copy())
+        X = similarity(modified_answers)
+        c = X.replace(1, 0).as_matrix().flatten()
+        truths[str(modificator)] = c
+        s = c if s is None else s + c
+    truths['avg'] = s / len(truths)
 
-    plt.subplot(2, len(modificators), i + 1)
-    plt.title(str(modificator))
-    plot_clustering(
-        X.index, xs, ys,
-        labels=3 + 1 * (np.array([int(items.get_value(item, 'name')) for item in X.index]) > 10),
-        texts=[items.get_value(item, 'name') for item in X.index],
-        # shapes=ground_truth,
-    )
+    for run in range(10):
+        for frac in np.concatenate([np.arange(0.02, .41, 0.02), np.arange(0.6, 1.1, 0.2)]):
+            sampled_answers = answers.sample(frac=frac)
+            for modificator in modificators:
+                print(run, frac, modificator)
+                modified_answers = modificator.modify(sampled_answers.copy())
+                X = similarity(modified_answers)
+                c = X.replace(1, 0).as_matrix().flatten()
+                for final_modificator, truth in truths.items():
+                    p, _ = pearsonr(truth, c)
+                    results.append([
+                        str(modificator),
+                        str(final_modificator),
+                        frac,
+                        p,
+                        run
+                    ])
 
-    plt.subplot(2, len(modificators), i + 3)
-    plt.title(str(modificator))
-    plot_clustering(
-        X.index, xs, ys,
-        labels=ground_truth,
-        texts=[items.get_value(item, 'name') for item in X.index],
-        # shapes=np.array([int(items.get_value(item, 'name')) for item in X.index]) > 10,
-    )
+    results = pd.DataFrame(results, columns=['time_use', 'target_time_use', 'sample', 'pearson', 'run'])
+    for modificator in modificators + ['avg']:
+        plt.figure()
+        plt.title(str(modificator))
+        # sns.pointplot(data=results[results['target_time_use'] == str(modificator)], x='sample', y='pearson', hue='time_use')
+        sns.tsplot(data=results[results['target_time_use'] == str(modificator)], time='sample', value='pearson', unit='run', condition='time_use')
 
-
-plt.legend(handles=[
-    mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[0], label=v)
-    for i, v in enumerate(true_cluster_names)
-])
 
 plt.show()
