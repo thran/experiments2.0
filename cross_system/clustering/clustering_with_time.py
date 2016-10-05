@@ -12,12 +12,12 @@ import matplotlib.lines as mlines
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse, \
     MathGardenResponseModificator
 
-data_set, n_clusters  = 'matmat-numbers', 3
+# data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-multiplication', 1
 # data_set, n_clusters  = 'matmat-addition', 1
 # data_set, n_clusters  = 'matmat-all', 4
 # data_set, n_clusters  = 'math_garden-multiplication', 1
-# data_set, n_clusters  = 'math_garden-addition', 1
+data_set, n_clusters  = 'math_garden-addition', 1
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-all2', 2
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
@@ -35,36 +35,30 @@ clustering = kmeans
 # answers = answers.loc[:67000, :]
 print(len(answers))
 
-if True:
-    plt.figure(figsize=(8, 8))
+if False:
+    plt.figure(figsize=(10, 5))
+    # students = answers['student'].unique()
+    # students = students[: len(students) // 2]
+    # answers = answers[answers['student'].isin(students)]
     for i, modificator in enumerate(modificators):
-        print(modificator)
+        print(modificator, len(answers))
         modified_answers = modificator.modify(answers.copy())
         X = similarity(modified_answers)
         xs, ys = projection(X, euclid=euclid)
         ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
 
-        plt.subplot(2, len(modificators), i + 1)
+        plt.subplot(1, len(modificators), i + 1)
         plt.title(str(modificator))
-        plot_clustering(
-            X.index, xs, ys,
-            labels=3 + 1 * (np.array([int(items.get_value(item, 'name')) for item in X.index]) > 10),
-            texts=[items.get_value(item, 'name') for item in X.index],
-            # shapes=ground_truth,
-        )
 
-        plt.subplot(2, len(modificators), i + 3)
-        plt.title(str(modificator))
-        plot_clustering(
-            X.index, xs, ys,
-            labels=ground_truth,
-            texts=[items.get_value(item, 'name') for item in X.index],
-            # shapes=np.array([int(items.get_value(item, 'name')) for item in X.index]) > 10,
-        )
+        for x, y, item, visualization in zip(xs, ys, X.index, ground_truth):
+            value = items.get_value(item, 'name')
+            plt.plot(x, y, markers[visualization], color=colors[visualization], alpha=(int(value) + 5) / 25)
+            plt.text(x, y, value)
+
 
 
     plt.legend(handles=[
-        mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[0], label=v)
+        mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[i], label=v)
         for i, v in enumerate(true_cluster_names)
         ])
 
@@ -86,7 +80,7 @@ if False:
     g = sns.pairplot(data, diag_kind="kde")
     g.map_lower(sns.kdeplot, cmap="Blues_d")
 
-if False:
+if True:
     results = []
     truths = {}
     s = None

@@ -35,22 +35,22 @@ def data(n_students=100, n_concepts=5, n_items=15, difficulty_shift=0.5, skill_c
 
 
 similarities = [
-    (lambda x: similarity_pearson(x), False, 'pearson'),
-    (lambda x: similarity_kappa(x), False, 'kappa'),
-    (lambda x: similarity_cosine(x), False, 'Ochiai'),
-    (lambda x: similarity_yulesQ(x), False, 'YulesQ'),
-    (lambda x: similarity_accuracy(x), False, 'accuracy'),
-    (lambda x: similarity_jaccard(x), False, 'Jaccard'),
+    # (lambda x: similarity_pearson(x), False, 'pearson'),
+    # (lambda x: similarity_kappa(x), False, 'kappa'),
+    # (lambda x: similarity_cosine(x), False, 'Ochiai'),
+    (lambda x: similarity_yulesQ(x), False, 'Yule'),
+    # (lambda x: similarity_accuracy(x), False, 'accuracy'),
+    # (lambda x: similarity_jaccard(x), False, 'Jaccard'),
     # (lambda x: similarity_euclidean(x), False, 'euclid'),
     # (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
     # (lambda x: similarity_links(similarity_pearson(x), 0.1), True, 'pearson -> links -> euclid'),
     # (lambda x: similarity_kappa(x), True, 'kappa -> euclid'),
-    # (lambda x: similarity_yulesQ(x), True, 'yuleQ -> euclid'),
+    (lambda x: similarity_yulesQ(x), True, 'Yule -> Euclid'),
     # (lambda x: similarity_pearson(similarity_pearson(x)), False, 'pearson -> pearson'),
-    # (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'yuleQ -> pearson'),
-    # (lambda x: similarity_links(similarity_yulesQ(x)), False, 'yuleQ -> links'),
+    (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'Yule -> Pearson'),
+    (lambda x: similarity_links(similarity_yulesQ(x)), False, 'Yule -> Links'),
     # (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
-    # (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'yuleQ -> pearson -> euclid'),
+    (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'Yule -> Pearson -> Euclid'),
     # (lambda x: similarity_euclidean(similarity_pearson(x)), True, 'pearson -> euclid -> euclid'),
 ]
 clusterings = [
@@ -64,7 +64,7 @@ n_clusters = 4
 n_students = 50
 skill_correlation = 0.7
 difficulty_shift = 0.5
-clustering = kmeans
+clustering = hierarchical
 missing = 0.
 
 
@@ -95,7 +95,7 @@ def students(runs=50):
     sns.pointplot(data=results, x='students', y='rand_index', hue='similarity')
 
 
-def skill_correlations(runs=10, n_clusters=5):
+def skill_correlations(runs=50, n_clusters=5):
     results = []
     clustering = kmeans
     for run in range(runs):

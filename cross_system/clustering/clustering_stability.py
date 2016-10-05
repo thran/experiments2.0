@@ -15,7 +15,7 @@ import matplotlib.pylab as plt
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
 # similarity_setting = lambda x: similarity_pearson(x), False, 'pearson'
-similarity_setting = similarity_yulesQ, False, 'yuleQ'
+similarity_setting = similarity_yulesQ, True, 'yuleQ'
 # similarity_setting = similarity_pearson, True, 'pearson -> euclid'
 # similarity_setting = lambda x: similarity_yulesQ(x), True, 'yuleQ -> euclid'
 # similarity_setting = lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'
@@ -27,7 +27,6 @@ for data_set in [
         # 'simulated-s250-c2-i20',
         'matmat-numbers',
         'matmat-addition',
-        'matmat-multiplication',
         'math_garden-addition',
         'math_garden-multiplication',
         'cestina-B',

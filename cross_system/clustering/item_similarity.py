@@ -15,13 +15,14 @@ from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 # data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
 # data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+data_set, n_clusters  = 'simulated-s50-c5-i100', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-multiplication', 1
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
-data_set, n_clusters = 'cestina-konc-prid', 7
+# data_set, n_clusters = 'cestina-konc-prid', 7
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
 items = pd.read_pickle('data/{}-items.pd'.format(data_set))
 true_cluster_names = list(items['concept'].unique())
@@ -36,13 +37,13 @@ answers = modificator.modify(answers)
 projection = tsne
 
 
-plt.figure(figsize=(16, 24))
+plt.figure(figsize=(15, 5))
 plt.suptitle('{} - {}'.format(data_set, modificator))
 similarities, similarities_names = [], []
 
-for f in [similarity_yulesQ, similarity_pearson, similarity_kappa, similarity_euclidean, similarity_cosine]:
-# for f in [similarity_pearson, similarity_euclidean, similarity_cosine]:
-    for g in [None, similarity_pearson, similarity_euclidean]:
+# for f in [similarity_yulesQ, similarity_pearson, similarity_kappa, similarity_euclidean, similarity_cosine]:
+for f in [similarity_pearson, similarity_yulesQ]:
+    for g in [None, similarity_pearson]:
         if f is None:
             continue
         if g is not None:
@@ -109,18 +110,19 @@ if False:
 
 
         # plt.subplot(len(similarities) // 2, 4, i + 1 + i // 2 * 2)
-        plt.subplot(len(similarities) // 3, 3, i + 1)
+        plt.subplot(len(similarities) // 2, 2, i + 1)
         plt.title(similarities_name)
         if not similarities_name.endswith('euclidean'):
             plt.xlim([-1,1])
-            sns.distplot(same)
+            sns.distplot(same, label='inner')
             if len(different):
-                sns.distplot(different)
+                sns.distplot(different, label='outer')
         else:
             plt.xlim([-max(different), 0])
             sns.distplot(-np.array(same))
             if len(different):
                 sns.distplot(-np.array(different))
+        plt.legend()
 
         if i % 2 == 1 and False:
             plt.subplot(len(similarities) // 2, 4, i + 2 + i // 2 * 2)
@@ -142,21 +144,15 @@ if False:
                 shapes=ground_truth,
             )
 
-    plt.legend(handles=[
-        mlines.Line2D([], [], color='black', linewidth=0, marker=markers[i], label=v)
-        for i, v in enumerate(true_cluster_names)
-    ])
-
-
 if True:
     similarity, euclid = similarity_pearson, True
 
-    embeddings = [pca, isomap, mds, spectral, tsne]
+    embeddings = [pca, mds, tsne]
     for i, embedding in enumerate(embeddings):
         X = similarity(answers)
         ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
         xs, ys = embedding(X, euclid=euclid)
-        plt.subplot(2, len(embeddings) // 2 + 1, i + 1)
+        plt.subplot(1, len(embeddings), i + 1)
         plt.title(embedding.__name__)
         plot_clustering(
             X.index, xs, ys,
@@ -165,11 +161,11 @@ if True:
             shapes=None,
         )
 
-
-    plt.legend(handles=[
-        mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[0], label=v)
-        for i, v in enumerate(true_cluster_names)
-    ])
+    if False:
+        plt.legend(handles=[
+            mlines.Line2D([], [], color=colors[i], linewidth=0, marker=markers[0], label=v)
+            for i, v in enumerate(true_cluster_names)
+        ])
     plt.show()
 
 
