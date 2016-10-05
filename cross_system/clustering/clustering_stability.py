@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 import seaborn as sns
+from scipy.stats import pearsonr
 from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score as rand_index
 
@@ -13,78 +14,53 @@ import matplotlib.lines as mlines
 import matplotlib.pylab as plt
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
-
-def sample(answers, n=None, ratio=1):
-    if n is not None:
-        return answers.sample(n=n)
-    return answers.sample(n=int(ratio * len(answers)))
-
-# data_set, n_clusters  = 'matmat-numbers', 3
-# data_set, n_clusters  = 'matmat-all', 4
-# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
-# data_set, n_clusters  = 'simulated-s100-c2-i50', 2
-# data_set, n_clusters  = 'math_garden-all', 3
-# data_set, n_clusters  = 'math_garden-multiplication', 1
-# data_set, n_clusters = 'cestina-B', 2
-# data_set, n_clusters = 'cestina-L', 2
-data_set, n_clusters = 'cestina-Z', 2
-answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
-items = pd.read_pickle('data/{}-items.pd'.format(data_set))
-true_cluster_names = list(items['concept'].unique())
-
 # similarity_setting = lambda x: similarity_pearson(x), False, 'pearson'
-# similarity_setting = lambda x: similarity_yulesQ(x), False, 'yuleQ'
-similarity_setting = lambda x: similarity_pearson(x), True, 'pearson -> euclid'
+similarity_setting = similarity_yulesQ, False, 'yuleQ'
+# similarity_setting = similarity_pearson, True, 'pearson -> euclid'
 # similarity_setting = lambda x: similarity_yulesQ(x), True, 'yuleQ -> euclid'
 # similarity_setting = lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'
-
-dimensions = 0
-clusterings = [
-    kmeans,
-    spectral_clustering2,
-    hierarchical
-]
-
 runs = 10
 results = []
-inner_results = []
-for frac in np.arange(0.1, 1.1, 0.1):
-    all_labels = defaultdict(lambda: [])
-    for run in range(runs):
-        A = answers.sample(frac=frac)
-        similarity, euclid, similarity_name = similarity_setting
-        X = similarity(A)
-        items_ids = X.index
-        if dimensions:
-            model = PCA(n_components=dimensions)
-            X = pd.DataFrame(data=model.fit_transform(X), index=X.index)
 
-        ground_truth = np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in items_ids])
+for data_set in [
+        # 'simulated-s100-c5-i20',
+        # 'simulated-s250-c2-i20',
+        'matmat-numbers',
+        'matmat-addition',
+        'matmat-multiplication',
+        'math_garden-addition',
+        'math_garden-multiplication',
+        'cestina-B',
+        'cestina-konc-prid',
+    ]:
+    answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
+    items = pd.read_pickle('data/{}-items.pd'.format(data_set))
+    true_cluster_names = list(items['concept'].unique())
+    students = pd.Series(answers['student'].unique())
 
-        for clustering in clusterings:
-            labels = clustering(X, n_clusters, euclid=euclid)
-            all_labels[clustering].append(labels)
-            rand = rand_index(ground_truth, labels)
-            print('  - ', clustering.__name__, rand)
-            results.append([frac, clustering.__name__, rand])
-    for clustering in clusterings:
-        for i, l1 in enumerate(all_labels[clustering]):
-            for j, l2 in enumerate(all_labels[clustering]):
-                if i <= j:
-                    continue
-                rand = rand_index(l1, l2)
-                inner_results.append([frac, clustering.__name__, rand])
+    for frac in list(np.arange(0.02, 0.2, 0.02)) + list(np.arange(0.2, 1.1, 0.1)):
+        for run in range(runs):
+            S = students.sample(frac=frac)
+            S1 = S[:len(S) // 2]
+            S2 = S[len(S) // 2:]
+            A1 = answers[answers['student'].isin(S1)]
+            A2 = answers[answers['student'].isin(S2)]
+            print(data_set, frac, len(A1), len(A2))
+            similarity, euclid, similarity_name = similarity_setting
+            X1 = similarity(A1)
+            X2 = similarity(A2)
+            if len(X1.index) != len(X2.index):
+                continue
 
-results = pd.DataFrame(results, columns=['frac', 'clustering', 'rand_index'])
-inner_results = pd.DataFrame(inner_results, columns=['frac', 'clustering', 'rand_index'])
+            p, _ = pearsonr(X1.replace(1, 0).as_matrix().flatten(), X2.replace(1, 0).as_matrix().flatten())
+
+            results.append([frac, p, run, data_set])
+
+results = pd.DataFrame(results, columns=['frac', 'correlation', 'run', 'data_set'])
 print(results)
 
 plt.figure(figsize=(16, 24))
-plt.title('{} - {}'.format(data_set, similarity_setting[2]))
-sns.pointplot(data=results, x='frac', y='rand_index', hue='clustering')
-
-plt.figure(figsize=(16, 24))
-plt.title('{} - {}'.format(data_set, similarity_setting[2]))
-sns.pointplot(data=inner_results, x='frac', y='rand_index', hue='clustering')
+# sns.pointplot(data=results, x='frac', y='rand_index', hue='clustering')
+sns.tsplot(data=results, time='frac', value='correlation', unit='run', condition='data_set')
 
 plt.show()
