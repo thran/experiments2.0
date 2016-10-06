@@ -19,22 +19,23 @@ n_clusters = len(true_cluster_names)
 print(true_cluster_names)
 
 similarities = [
-    # (lambda x: similarity_pearson(x), False, 'pearson'),
+    (lambda x: similarity_pearson(x), False, 'Pearson'),
     # (lambda x: similarity_kappa(x), False, 'kappa'),
     # (lambda x: similarity_cosine(x), False, 'Ochiai'),
-    (lambda x: similarity_yulesQ(x), False, 'Yule'),
+    # (lambda x: similarity_yulesQ(x), False, 'Yule'),
     # (lambda x: similarity_accuracy(x), False, 'accuracy'),
     # (lambda x: similarity_jaccard(x), False, 'Jaccard'),
     # (lambda x: similarity_euclidean(x), False, 'euclid'),
-    # (lambda x: similarity_pearson(x), True, 'pearson -> euclid'),
+    (lambda x: similarity_pearson(x), True, 'Pearson -> Euclid'),
     # (lambda x: similarity_links(similarity_pearson(x), 0.1), True, 'pearson -> links -> euclid'),
     # (lambda x: similarity_kappa(x), True, 'kappa -> euclid'),
-    (lambda x: similarity_yulesQ(x), True, 'Yule -> Euclid'),
-    # (lambda x: similarity_pearson(similarity_pearson(x)), False, 'pearson -> pearson'),
-    (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'Yule -> Pearson'),
-    (lambda x: similarity_links(similarity_yulesQ(x)), False, 'Yule -> Links'),
-    # (lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'),
-    (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'Yule -> Pearson -> Euclid'),
+    # (lambda x: similarity_yulesQ(x), True, 'Yule -> Euclid'),
+    (lambda x: similarity_pearson(similarity_pearson(x)), False, 'Pearson -> Pearson'),
+    # (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'Yule -> Pearson'),
+    # (lambda x: similarity_links(similarity_yulesQ(x)), False, 'Yule -> Links'),
+    (lambda x: similarity_links(similarity_pearson(x)), False, 'Pearson -> Links'),
+    (lambda x: similarity_pearson(similarity_pearson(x)), True, 'Pearson -> Pearson -> Euclid'),
+    # (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'Yule -> Pearson -> Euclid'),
     # (lambda x: similarity_euclidean(similarity_pearson(x)), True, 'pearson -> euclid -> euclid'),
 ]
 clusterings = [
@@ -49,10 +50,10 @@ students = pd.Series(answers['student'].unique())
 print(len(students))
 results = []
 for run in range(50):
-    # for student_count in range(100, 1101, 100):
-    for student_count in range(10000, 60001, 10000):
-        # A = answers[answers['student'].isin(students.sample(n=student_count))]
-        A = answers.sample(n=student_count)
+    for student_count in range(100, 1101, 100):
+    # for student_count in range(10000, 60001, 10000):
+        A = answers[answers['student'].isin(students.sample(n=student_count))]
+        # A = answers.sample(n=student_count)
         print(run, student_count, len(A))
         for similarity, euclid, similarity_name in similarities:
             X = similarity(A)

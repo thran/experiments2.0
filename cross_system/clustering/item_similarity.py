@@ -14,8 +14,8 @@ from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
 # data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
-# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
-data_set, n_clusters  = 'simulated-s50-c5-i100', 5
+data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+# data_set, n_clusters  = 'simulated-s50-c5-i100', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-multiplication', 1

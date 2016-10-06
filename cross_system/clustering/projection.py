@@ -27,10 +27,10 @@ def pca(similarity, n_components=2, euclid=False):
 
 def tsne(similarity, euclid=False):
     if euclid:
-        model = TSNE(learning_rate=300, n_iter=100000, init='random')
+        model = TSNE(learning_rate=100, n_iter=200000)
         result = model.fit_transform(similarity)
     else:
-        model = TSNE(learning_rate=300, n_iter=100000, init='random', metric='precomputed')
+        model = TSNE(learning_rate=100, n_iter=100000, init='random', metric='precomputed')
         result = model.fit_transform(1 - similarity)
 
     return result.T
