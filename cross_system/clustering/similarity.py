@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine, euclidean
@@ -33,6 +34,24 @@ def jaccard(x, y):
     d = ((x==0) & (y==0)).sum()
 
     return (a) / (a + b + c)
+
+
+def sokal(x, y):
+    a = ((x==1) & (y==1)).sum()
+    b = ((x==1) & (y==0)).sum()
+    c = ((x==0) & (y==1)).sum()
+    d = ((x==0) & (y==0)).sum()
+
+    return (a + d) / (a + b + c +d)
+
+
+def ochiai(x, y):
+    a = ((x==1) & (y==1)).sum()
+    b = ((x==1) & (y==0)).sum()
+    c = ((x==0) & (y==1)).sum()
+    d = ((x==0) & (y==0)).sum()
+
+    return (a) / math.sqrt((a + b) * (a + c))
 
 
 
@@ -130,6 +149,20 @@ def similarity_yulesQ(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, yulesQ)
+
+
+@cache_pandas
+def similarity_ochiai(data, cache=None):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, ochiai)
+
+
+@cache_pandas
+def similarity_sokal(data, cache=None):
+    if 'student' in data.columns:
+        data = data.pivot('student', 'item', 'correct')
+    return pairwise_metric(data, sokal)
 
 
 @cache_pandas
