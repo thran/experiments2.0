@@ -3,3 +3,4 @@
 cache/*
 !cross_system/**/*.csv
 *.RData
+*.rdata

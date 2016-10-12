@@ -37,9 +37,9 @@ def matmat_all():
     print(items)
     items.to_pickle('matmat-all-items.pd')
 
-def math_garden():
-    concept = 'subtraction'
+def math_garden(concept='subtraction'):
     answers = pd.read_pickle('../../../data/mathgarden/{}.pd'.format(concept))
+    items = pd.read_pickle('../../../data/mathgarden/{}.pd'.format('items'))
     answers = answers.rename(columns={'user_id': 'student', 'item_id': 'item', 'correct_answered': 'correct', 'response_in_milliseconds': 'response_time'})
     answers = answers.loc[:, ['student', 'item', 'response_time', 'correct']]
     answers = answers.groupby(['student', 'item']).first().reset_index()
@@ -48,7 +48,7 @@ def math_garden():
     answers['response_time'] /= 1000
 
     item_ids = answers['item'].unique()
-    items = pd.DataFrame(np.array([item_ids, [concept] * len(item_ids)]).T, index=item_ids, columns=['name', 'concept'])
+    items = pd.DataFrame(np.array([items.loc[item_ids], [concept] * len(item_ids)]).T, index=item_ids, columns=['name', 'concept'])
 
     answers.to_pickle('math_garden-{}-answers.pd'.format(concept))
     items.to_pickle('math_garden-{}-items.pd'.format(concept))
@@ -123,13 +123,14 @@ def simulated(n_students=100, n_concepts=5, n_items=20):
     items.to_pickle('simulated-s{}-c{}-i{}-items.pd'.format(n_students, n_concepts, n_items))
 
 
-# math_garden()
+# math_garden('addition')
+# math_garden('multiplication')
 # matmat()
 # matmat_all()
 # math_garden_all()
 # cestina(7, 'Z')
 # cestina(1, 'B')
 # cestina(2, 'L')
-cestina(9, 'konc-prid')
+# cestina(9, 'konc-prid')
 
-simulated(n_students=100, n_concepts=2, n_items=100)
+# simulated(n_students=100, n_concepts=2, n_items=100)
