@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from models.eloHierarchical import EloHierarchicalModel
+from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import ItemAvgModel, StudentAvgModel, AvgModel
 from models.time_models import TimeAvgModel, TimeCombiner, TimeStudentAvgModel, TimeItemAvgModel, BasicTimeModel, \
     TimeEloHierarchicalModel
@@ -22,7 +23,7 @@ def grid_search_K():
 
 def grid_search_Ks():
     grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeEloHierarchicalModel(**kwargs)),
-                {"alpha": 1.0, "beta": 0.1},
+                {"alpha": 0.8, "beta": 0.08},
                 {"KC": np.arange(0.025, 0.2, 0.025),"KI": np.arange(0.025, 0.2, 0.025)},
                 plot_axes=['KI', 'KC'], time=True,
                 )
@@ -86,8 +87,9 @@ compare_models(data, [
     TimeCombiner(AvgModel(), TimeAvgModel()),
     TimeCombiner(ItemAvgModel(), TimeItemAvgModel()),
     TimeCombiner(StudentAvgModel(), TimeStudentAvgModel()),
-    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
+    TimeCombiner(EloPriorCurrentModel(KC=2, KI=0.5), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
     TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), TimeEloHierarchicalModel()),
+    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), TimeEloHierarchicalModel(alpha=0.08, beta=0.08, KC=0.75, KI=1)),
 ], dont=0)
 
 

@@ -166,7 +166,7 @@ class TimeEloHierarchicalModel(Model):
 
     def __init__(self, alpha=0.8, beta=0.08, KC=0.075, KI=0.1):
         Model.__init__(self)
-        self.VERSION = 2
+        self.VERSION = 4
         self.name = "TimeHierarchical"
 
         self._alpha = alpha
@@ -177,9 +177,11 @@ class TimeEloHierarchicalModel(Model):
         self.decay_function = lambda x: alpha / (1 + beta * x)
 
     def pre_process_data(self, data):
+        self._count = 0
+        self._log_avg = 0
         self.skill_parents = data.get_skill_structure()
         self.item_parents = data.get_item_assignment()
-        self.skill = defaultdict(lambda: defaultdict(lambda: 0))
+        self.skill = defaultdict(lambda: defaultdict(lambda: None))
         self.intensity = defaultdict(lambda: 0)
         self.student_attempts = defaultdict(lambda: defaultdict(lambda: 0))
         self.item_attempts = defaultdict(lambda: 0)
@@ -192,6 +194,10 @@ class TimeEloHierarchicalModel(Model):
 
     def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
         dif = (math.log(time_prediction) - math.log(response_time))
+
+        if self.student_attempts[1][student] == 0:
+            self._count += 1
+            self._log_avg += (dif - self._log_avg) / self._count
 
         for level, skill in enumerate(self._get_parents(item)):
             p = self.intensity[item] - self._get_skill(student, skill)
@@ -210,7 +216,11 @@ class TimeEloHierarchicalModel(Model):
     def _get_skill(self, student, skill):
         skill_value = 0
         while skill is not None:
-            skill_value += self.skill[skill][student]
+            s = self.skill[skill][student]
+            if s is None:
+                s = self._log_avg if skill == 1 else 0
+                self.skill[skill][student] = s
+            skill_value += s
             skill = self.skill_parents[skill]
         return skill_value
 
