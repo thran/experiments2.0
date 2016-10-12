@@ -37,6 +37,9 @@ for data_set in [
     true_cluster_names = list(items['concept'].unique())
     students = pd.Series(answers['student'].unique())
 
+    # print(data_set, len(students), len(items), len(answers))
+    # continue
+
     for frac in list(np.arange(0.02, 0.2, 0.02)) + list(np.arange(0.2, 1.1, 0.1)):
         for run in range(runs):
             S = students.sample(frac=frac)
