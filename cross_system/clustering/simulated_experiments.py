@@ -35,7 +35,7 @@ def data(n_students=100, n_concepts=5, n_items=15, difficulty_shift=0.5, skill_c
 
 
 similarities = [
-    (lambda x: similarity_pearson(x), False, 'Pearson'),
+    # (lambda x: similarity_pearson(x), False, 'Pearson'),
     # (lambda x: similarity_kappa(x), False, 'kappa'),
     # (lambda x: similarity_cosine(x), False, 'Ochiai'),
     # (lambda x: similarity_yulesQ(x), False, 'Yule'),
@@ -46,11 +46,11 @@ similarities = [
     # (lambda x: similarity_links(similarity_pearson(x), 0.1), True, 'pearson -> links -> euclid'),
     # (lambda x: similarity_kappa(x), True, 'kappa -> euclid'),
     # (lambda x: similarity_yulesQ(x), True, 'Yule -> Euclid'),
-    (lambda x: similarity_pearson(similarity_pearson(x)), False, 'Pearson -> Pearson'),
+    # (lambda x: similarity_pearson(similarity_pearson(x)), False, 'Pearson -> Pearson'),
     # (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'Yule -> Pearson'),
     # (lambda x: similarity_links(similarity_yulesQ(x)), False, 'Yule -> Links'),
-    (lambda x: similarity_links(similarity_pearson(x)), False, 'Pearson -> Links'),
-    (lambda x: similarity_pearson(similarity_pearson(x)), True, 'Pearson -> Pearson -> Euclid'),
+    # (lambda x: similarity_links(similarity_pearson(x)), False, 'Pearson -> Links'),
+    # (lambda x: similarity_pearson(similarity_pearson(x)), True, 'Pearson -> Pearson -> Euclid'),
     # (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'Yule -> Pearson -> Euclid'),
     # (lambda x: similarity_euclidean(similarity_pearson(x)), True, 'pearson -> euclid -> euclid'),
 ]
@@ -61,22 +61,23 @@ clusterings = [
 ]
 
 similarity, euclid, similarity_name = similarities[0]
-n_clusters = 4
-n_students = 50
-skill_correlation = 0.7
+n_clusters = 5
+n_items = 20
+n_students = 100
+skill_correlation = 0
 difficulty_shift = 0.5
-clustering = hierarchical
+clustering = kmeans
 missing = 0.
 
 
 
-def students(runs=5):
+def students(runs=15):
     results = []
     for run in range(runs):
-        for n_students in range(100, 1001, 100):
+        # for n_students in range(100, 1001, 100):
         # for n_students in [10, 25, 50, 100, 200, 300,  400, 600]:
-        # for difficulty_shift in np.arange(-1, 1.1, 0.2):
-            answers, items = data(n_students=n_students, n_concepts=n_clusters, skill_correlation=skill_correlation, difficulty_shift=difficulty_shift, missing=missing)
+        for difficulty_shift in np.arange(-1, 1.1, 0.2):
+            answers, items = data(n_students=n_students, n_items=n_items, n_concepts=n_clusters, skill_correlation=skill_correlation, difficulty_shift=difficulty_shift, missing=missing)
             true_cluster_names = list(items['concept'].unique())
             # for i, clustering in enumerate(clusterings):
             for similarity, euclid, similarity_name in similarities:
@@ -93,7 +94,7 @@ def students(runs=5):
     print(results)
 
     plt.figure(figsize=(16, 24))
-    sns.pointplot(data=results, x='students', y='rand_index', hue='similarity')
+    sns.pointplot(data=results, x='difficulty_shift', y='rand_index', hue='similarity')
 
 
 def skill_correlations(runs=50, n_clusters=5):

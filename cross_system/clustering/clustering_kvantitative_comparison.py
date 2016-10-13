@@ -48,13 +48,14 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, h
 
 
-similarity, euclid, similarity_name = similarity_yulesQ, True, 'pearson -> euclid'
+similarity, euclid, similarity_name = similarity_pearson, True, 'pearson -> euclid'
 clusterings = [kmeans, hierarchical, spectral_clustering2]
 
 results = defaultdict(lambda: [])
 for run in range(50):
     print(run)
-    (answers, items), n_clusters = data(n_students=50, n_concepts=5, n_items=20), 5
+    (answers, items), n_clusters = data(n_students=200, n_concepts=5, n_items=20), 5
+    answers = answers.sample(frac=0.5)
     # (answers, items), n_clusters = data(n_students=50, n_concepts=2, n_items=50), 2
     # data_set, n_clusters = 'cestina-konc-prid', 7
     # data_set, n_clusters = 'matmat-numbers', 3
@@ -76,7 +77,7 @@ print('')
 for clustering in clusterings:
     rands = np.array(results[clustering.__name__])
     m, h = mean_confidence_interval(rands)
-    print('& ${} \pm {}$'.format(round(m, 2), round(h, 2)), end=' ')
-    # print(clustering.__name__, round(m, 2), round(h, 2))
+    # print('& ${} \pm {}$'.format(round(m, 2), round(h, 2)), end=' ')
+    print(round(m, 2), round(h, 2), clustering.__name__)
 
 plt.show()
