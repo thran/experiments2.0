@@ -1,5 +1,4 @@
 import seaborn as sns
-from sklearn.cluster import KMeans
 from sklearn.metrics import adjusted_rand_score as rand_index
 
 from cross_system.clustering.similarity import *
@@ -14,11 +13,11 @@ from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
 # data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
-data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s50-c5-i100', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
-# data_set, n_clusters  = 'math_garden-multiplication', 1
+data_set, n_clusters  = 'math_garden-multiplication', 3
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
@@ -26,8 +25,6 @@ data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
 items = pd.read_pickle('data/{}-items.pd'.format(data_set))
 true_cluster_names = list(items['concept'].unique())
-
-kmeans = KMeans(n_clusters=n_clusters, n_init=100, max_iter=1000)
 
 modificator = BinaryResponse()
 # modificator = TimeLimitResponseModificator([(5, 0.5)])
@@ -37,7 +34,7 @@ answers = modificator.modify(answers)
 projection = tsne
 
 
-plt.figure(figsize=(15, 5))
+plt.figure(figsize=(15, 10))
 plt.suptitle('{} - {}'.format(data_set, modificator))
 similarities, similarities_names = [], []
 
@@ -53,17 +50,17 @@ for f in [similarity_pearson, similarity_yulesQ]:
             similarities.append(lambda x, f=f: f(x, cache=data_set + str(modificator)))
             similarities_names.append(f.__name__.replace('similarity_', ''))
 
-
-if False:
+if True:
+    euclid = True
     clusters = []
     for i, similarity in enumerate(similarities):
         print(similarities_names[i])
         X = similarity(answers)
-        labels = kmeans.fit_predict(X)
+        labels = kmeans(X, concepts=n_clusters, euclid=euclid)
         clusters.append(labels)
 
         items_ids = X.index
-        (xs, ys), _ = projection(X, clusters=n_clusters)
+        xs, ys = projection(X, euclid=euclid)
         ground_truth = [true_cluster_names.index(items.get_value(item, 'concept')) for item in items_ids]
 
         plt.subplot(2, len(similarities) / 2 + 1, i + 1)
@@ -91,7 +88,7 @@ if False:
 
     sns.heatmap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
     plt.title(data_set)
-    sns.clustermap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
+    # sns.clustermap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
 
 
 if False:
@@ -144,7 +141,7 @@ if False:
                 shapes=ground_truth,
             )
 
-if True:
+if False:
     similarity, euclid = similarity_pearson, True
 
     embeddings = [pca, mds, tsne]

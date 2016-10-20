@@ -25,9 +25,9 @@ def pca(similarity, n_components=2, euclid=False):
     return result.T
 
 
-def tsne(similarity, euclid=False):
+def tsne(similarity, euclid=False, perplexity=30):
     if euclid:
-        model = TSNE(learning_rate=100, n_iter=200000)
+        model = TSNE(learning_rate=100, perplexity=perplexity, n_iter=200000)
         result = model.fit_transform(similarity)
     else:
         model = TSNE(learning_rate=100, n_iter=100000, init='random', metric='precomputed')

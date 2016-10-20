@@ -47,8 +47,11 @@ def math_garden(concept='subtraction'):
     answers['item'] = answers['item'].astype(int)
     answers['response_time'] /= 1000
 
+    print(items)
     item_ids = answers['item'].unique()
     items = pd.DataFrame(np.array([items.loc[item_ids], [concept] * len(item_ids)]).T, index=item_ids, columns=['name', 'concept'])
+    print(item_ids)
+    print(items)
 
     answers.to_pickle('math_garden-{}-answers.pd'.format(concept))
     items.to_pickle('math_garden-{}-items.pd'.format(concept))
@@ -92,14 +95,14 @@ def cestina(concept_id=1, concept_name='B'):
 
 
 def math_garden_all():
-    # concepts = ['addition', 'subtraction', 'multiplication']
-    concepts = ['addition', 'subtraction']
+    concepts = ['addition', 'subtraction', 'multiplication']
+    # concepts = ['addition', 'subtraction']
 
     answers = pd.concat([pd.read_pickle('math_garden-{}-answers.pd'.format(c)) for c in concepts])
     answers = answers.set_index(np.arange(len(answers)))
-    answers.to_pickle('math_garden-all2-answers.pd')
+    answers.to_pickle('math_garden-all-answers.pd')
     items = pd.concat([pd.read_pickle('math_garden-{}-items.pd'.format(c)) for c in concepts])
-    items.to_pickle('math_garden-all2-items.pd')
+    items.to_pickle('math_garden-all-items.pd')
     
     
 def simulated(n_students=100, n_concepts=5, n_items=20):
@@ -125,9 +128,10 @@ def simulated(n_students=100, n_concepts=5, n_items=20):
 
 # math_garden('addition')
 # math_garden('multiplication')
+# math_garden('subtraction')
 # matmat()
 # matmat_all()
-# math_garden_all()
+math_garden_all()
 # cestina(7, 'Z')
 # cestina(1, 'B')
 # cestina(2, 'L')
