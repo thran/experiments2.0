@@ -5,7 +5,7 @@ from models.eloHierarchical import EloHierarchicalModel
 from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import ItemAvgModel, StudentAvgModel, AvgModel
 from models.time_models import TimeAvgModel, TimeCombiner, TimeStudentAvgModel, TimeItemAvgModel, BasicTimeModel, \
-    TimeEloHierarchicalModel
+    TimeEloHierarchicalModel, TimePriorCurrentModel, TimeConcepts
 from utils import data as d
 from utils.evaluator import Evaluator
 import matplotlib.pylab as plt
@@ -15,34 +15,34 @@ from utils.utils import grid_search, enumerate_df
 
 
 def grid_search_K():
-    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), BasicTimeModel(**kwargs)),
-                {"alpha": 0.6, "beta": 0.1},
-                {"K": np.arange(0, 1, 0.05)},
+    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeConcepts(concepts=concepts, **kwargs)),
+                {"alpha": 0.4, "beta": 0.05},
+                {"K": np.arange(0, 0.5, 0.05)},
                 plot_axes='K', time=True,
                 )
 
 def grid_search_Ks():
-    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeEloHierarchicalModel(**kwargs)),
-                {"alpha": 0.8, "beta": 0.08},
-                {"KC": np.arange(0.025, 0.2, 0.025),"KI": np.arange(0.025, 0.2, 0.025)},
+    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimePriorCurrentModel(**kwargs)),
+                {"alpha": 0.6, "beta": 0.1},
+                {"KC": np.arange(0.1, 0.7, 0.1),"KI": np.arange(0.1, 0.7, 0.1)},
                 plot_axes=['KI', 'KC'], time=True,
                 )
 
 
 def grid_search_AB():
-    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), BasicTimeModel(**kwargs)),
+    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeConcepts(concepts=concepts, **kwargs)),
                 {"K": 0.25}, {
-                    "alpha": np.arange(0.4, 1.3, 0.2),
-                    "beta": np.arange(0.06, 0.2, 0.02),
+                    "alpha": np.arange(0.2, 0.7, 0.2),
+                    "beta": np.arange(0.02, 0.1, 0.02),
                 }, plot_axes=['alpha', 'beta'], time=True,
                 )
 
 
 def grid_search_AB2():
-    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimeEloHierarchicalModel(**kwargs)),
-                {"KI": 0.1, 'KC': 0.075}, {
-                    "alpha": np.arange(0.6, 1.3, 0.2),
-                    "beta": np.arange(0.06, 0.2, 0.02),
+    grid_search(data, lambda **kwargs: TimeCombiner(AvgModel(), TimePriorCurrentModel(**kwargs)),
+                {"KI": 0.3, 'KC': 0.3}, {
+                    "alpha": np.arange(0.2, 1.1, 0.2),
+                    "beta": np.arange(0.02, 0.2, 0.02),
                 }, plot_axes=['alpha', 'beta'], time=True,
                 )
 
@@ -83,14 +83,27 @@ data.trim_times()
 data_long = d.Data("../data/matmat/2016-06-27/answers.pd", filter=(100, 100))
 data_long.trim_times()
 
+skills = pd.read_csv('../data/matmat/2016-06-27/skills.csv', index_col='id')
+items = pd.read_csv('../data/matmat/2016-06-27/items.csv')
+items = items.join(skills, on='skill_lvl_1')
+concepts = {}
+for concept in items['name'].unique():
+    concepts[concept] = list(items.loc[items['name'] == concept, 'id'])
+
+filters = {
+    k: lambda df, v=v: df[df['item'].isin(v)] for k, v in concepts.items()
+}
+
 compare_models(data, [
     TimeCombiner(AvgModel(), TimeAvgModel()),
-    TimeCombiner(ItemAvgModel(), TimeItemAvgModel()),
-    TimeCombiner(StudentAvgModel(), TimeStudentAvgModel()),
-    TimeCombiner(EloPriorCurrentModel(KC=2, KI=0.5), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
-    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), TimeEloHierarchicalModel()),
-    TimeCombiner(EloHierarchicalModel(KC=1, KI=0.75, alpha=0.8, beta=0.02), TimeEloHierarchicalModel(alpha=0.08, beta=0.08, KC=0.75, KI=1)),
-], dont=0)
+    TimeCombiner(AvgModel(), TimeItemAvgModel()),
+    TimeCombiner(AvgModel(), TimeStudentAvgModel()),
+    TimeCombiner(AvgModel(), BasicTimeModel(alpha=0.6, beta=0.1, K=0.25)),
+    TimeCombiner(AvgModel(), TimePriorCurrentModel(alpha=0.4, beta=0.04, KC=0.3, KI=0.3)),
+    TimeCombiner(AvgModel(), TimePriorCurrentModel(alpha=0.4, beta=0.04, KC=0.4, KI=0.4, first_level=False)),
+    TimeCombiner(AvgModel(), TimeConcepts(alpha=0.4, beta=0.05, K=0.25, concepts=concepts)),
+    TimeCombiner(AvgModel(), TimeEloHierarchicalModel()),
+], dont=0, answer_filters=filters)
 
 
 # learning(data.get_dataframe_all().join(pd.read_csv('../data/matmat/2016-06-27/items.csv'), on='item', rsuffix='_item'),

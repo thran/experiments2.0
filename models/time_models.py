@@ -159,6 +159,63 @@ class BasicTimeModel(Model):
         return self.intensity[item]
 
 
+class TimePriorCurrentModel(Model):
+
+    def __init__(self, alpha=1.0, beta=0.1, KC=1, KI=1, init_avg=0, first_level=3):
+        Model.__init__(self)
+        self.VERSION = 4
+        self.name = "Prior-Current-Time"
+
+        self._alpha = alpha
+        self._beta = beta
+        self._KC = KC
+        self._KI = KI
+        self._init_avg = init_avg
+        self._first_level = first_level
+
+        self.decay_function = lambda x: alpha / (1 + beta * x)
+
+    def pre_process_data(self, data):
+        self._count = 0
+        self._log_avg = self._init_avg
+        self.global_skill = defaultdict(lambda: self._log_avg)
+        self.local_skill = defaultdict(lambda: defaultdict(lambda: None))
+        self.intensity = defaultdict(lambda: 1)
+        self.student_attempts = defaultdict(lambda: 0)
+        self.item_attempts = defaultdict(lambda: 0)
+        self.first_attempt = defaultdict(lambda: defaultdict(lambda: True))
+        if self._first_level:
+            self.item_parents = data.get_item_assignment()
+
+    def predict(self, student, item, extra=None):
+        if self._first_level:
+            item = self.item_parents[item]
+        if self.local_skill[item][student] is None:
+            self.local_skill[item][student] = self.global_skill[student]
+
+        prediction = self.intensity[item] - self.local_skill[item][student]
+        return math.exp(prediction)
+
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
+        if self._first_level:
+            item = self.item_parents[item]
+        dif = (math.log(time_prediction) - math.log(response_time))
+
+        if self.first_attempt[item][student]:
+            self.intensity[item] -= self.decay_function(self.item_attempts[item]) * dif
+            self.global_skill[student] += self.decay_function(self.student_attempts[student]) * dif
+            self.student_attempts[student] += 1
+            self.item_attempts[item] += 1
+            self.first_attempt[item][student] = False
+        K = self._KC if correct else self._KI
+        self.local_skill[item][student] += K * dif
+
+    def get_skill(self, student):
+        return self.global_skill[student]
+
+    def get_difficulty(self, item):
+        return self.intensity[item]
+
 class TimeEloHierarchicalModel(Model):
     """
     Model work with tree structure and update all ancestors with level based decay
@@ -237,3 +294,74 @@ class TimeEloHierarchicalModel(Model):
 
     def get_difficulty(self, item):
         return self.intensity[item]
+
+class TimeConcepts(Model):
+    """
+    Model work with tree structure and update all ancestors with level based decay
+    """
+
+    def __init__(self, alpha=1.0, beta=0.1, K=1, concepts=None):
+        Model.__init__(self)
+        self.VERSION = 2
+        self.name = "TimeConcepts"
+
+        self._alpha = alpha
+        self._beta = beta
+        self._K = K
+        self._concepts = sorted(concepts.keys()) if concepts is not None else "All"
+        self._init_concept_map(concepts)
+
+        self.decay_function = lambda x: alpha / (1 + beta * x)
+
+    def pre_process_data(self, data):
+        self.global_skill = defaultdict(lambda: 0)
+        self.concept_skill = defaultdict(lambda: defaultdict(lambda: 0))
+        self.student_attempts = defaultdict(lambda: 0)
+        self.student_concept_attempts = defaultdict(lambda: defaultdict(lambda: 0))
+        self.intensity = defaultdict(lambda: 0)
+        self.item_attempts = defaultdict(lambda: 0)
+        self.first_attempt = defaultdict(lambda: defaultdict(lambda: True))
+
+    def predict(self, student, item, extra=None):
+        concept = self._get_concept(item)
+        if self.concept_skill[concept][student] is None:
+            self.concept_skill[concept][student] = self.global_skill[student]
+
+        skill = self.concept_skill[concept][student]
+        prediction = self.intensity[item] - skill
+        return math.exp(prediction)
+
+    def update(self, student, item, prediction, time_prediction, correct, response_time, extra=None):
+        concept = self._get_concept(item)
+        dif = (math.log(time_prediction) - math.log(response_time))
+
+        if self.first_attempt[item][student]:
+            self.intensity[item] -= self.decay_function(self.item_attempts[item]) * dif
+            self.item_attempts[item] += 1
+            self.first_attempt[item][student] = False
+            self.global_skill[student] += self.decay_function(self.student_attempts[student]) * dif
+
+        self.concept_skill[concept][student] += self._K * dif
+        self.student_concept_attempts[concept][student] += 1
+        self.student_attempts[student] += 1
+
+    def _get_concept(self, item):
+        if self.concept_map is None:
+            return 0
+        if item not in self.concept_map:
+            return "other"
+        return self.concept_map[item]
+
+    def _init_concept_map(self, concepts):
+        if concepts is None:
+            self.concept_map = None
+            return
+        self.concept_map = {}
+        for concept, items in concepts.items():
+            self.concept_map.update({item: concept for item in items})
+
+    def get_difficulties(self, items):
+        return [self.intensity[i] for i in items]
+
+    def get_skills(self, students):
+        return [self.global_skill[s] for s in students]

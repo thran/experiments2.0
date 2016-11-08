@@ -49,6 +49,22 @@ class Evaluator:
                     data = filter_function(self._data.get_dataframe_test())
                     report[filter_name] = self._basic_metrics(self._data.iter(data=data), **kwargs)
 
+                    report[filter_name]['time'] = self._basic_metrics(
+                        self._data.iter(data=data),
+                        prediction_column="time_prediction_log",
+                        observation_column="response_time_log",
+                        brier_min=self._data.get_dataframe_test()['time_prediction_log'].min(),
+                        brier_max=self._data.get_dataframe_test()['time_prediction_log'].max(),
+                        **kwargs)
+
+                    report[filter_name]['time-raw'] = self._basic_metrics(
+                        self._data.iter(data=data),
+                        prediction_column="time_prediction",
+                        observation_column="response_time",
+                        brier_min=self._data.get_dataframe_test()['time_prediction'].min(),
+                        brier_max=self._data.get_dataframe_test()['time_prediction'].max(),
+                        **kwargs)
+
         self._save_report(report)
         return report
 

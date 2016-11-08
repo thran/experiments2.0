@@ -8,8 +8,9 @@ import pandas as pd
 
 class Model:
     def __init__(self):
-            self.VERSION = 0
-            self.name = "Model"
+        self.VERSION = 0
+        self.name = "Model"
+        self.after_update_callback = None
 
     def __str__(self):
         if self.name == "Model":
@@ -41,6 +42,8 @@ class Model:
         for answer in data.iter_train():
             prediction, time_prediction = add_time_prediction_if_missing(self.predict(answer["student"], answer["item"], answer))
             self.update(answer["student"], answer["item"], prediction, time_prediction, answer["correct"], answer["response_time"], answer)
+            if self.after_update_callback is not None:
+                self.after_update_callback(answer["student"], answer["item"])
 
         if not only_train:
             print("  testing")
@@ -49,6 +52,8 @@ class Model:
                 self.update(answer["student"], answer["item"], prediction, time_prediction, answer["correct"], answer["response_time"], answer)
                 if logger is not None:
                     logger(answer, prediction, time_prediction)
+                if self.after_update_callback is not None:
+                    self.after_update_callback(answer["student"], answer["item"])
 
         self.post_process_data(data)
 
