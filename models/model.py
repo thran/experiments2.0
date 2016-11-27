@@ -11,6 +11,7 @@ class Model:
         self.VERSION = 0
         self.name = "Model"
         self.after_update_callback = None
+        self.model_time = False
 
     def __str__(self):
         if self.name == "Model":
@@ -34,6 +35,8 @@ class Model:
     def process_data(self, data, logger=None, only_train=False):
         def add_time_prediction_if_missing(param):
             if type(param) is not tuple or len(param) == 1:
+                if self.model_time:
+                    return None, param
                 return param, None
             return param
 

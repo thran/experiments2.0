@@ -41,6 +41,7 @@ class TimeAvgModel(Model):
         Model.__init__(self)
         self.VERSION = 1
         self.name = "TimeGlobal-average"
+        self.model_time = True
 
         self._init_avg = init_avg
 
@@ -61,6 +62,7 @@ class TimeStudentAvgModel(Model):
         Model.__init__(self)
         self.VERSION = 1
         self.name = "TimeStudent-average"
+        self.model_time = True
 
         self._init_avg = init_avg
 
@@ -88,6 +90,7 @@ class TimeItemAvgModel(Model):
         Model.__init__(self)
         self.VERSION = 1
         self.name = "TimeItem-average"
+        self.model_time = True
 
         self._init_avg = init_avg
 
@@ -115,6 +118,7 @@ class BasicTimeModel(Model):
         Model.__init__(self)
         self.VERSION = 3
         self.name = "Basic-Time"
+        self.model_time = True
 
         self._alpha = alpha
         self._beta = beta
@@ -165,6 +169,7 @@ class TimePriorCurrentModel(Model):
         Model.__init__(self)
         self.VERSION = 4
         self.name = "Prior-Current-Time"
+        self.model_time = True
 
         self._alpha = alpha
         self._beta = beta
@@ -225,6 +230,7 @@ class TimeEloHierarchicalModel(Model):
         Model.__init__(self)
         self.VERSION = 4
         self.name = "TimeHierarchical"
+        self.model_time = True
 
         self._alpha = alpha
         self._beta = beta
@@ -304,6 +310,7 @@ class TimeConcepts(Model):
         Model.__init__(self)
         self.VERSION = 2
         self.name = "TimeConcepts"
+        self.model_time = True
 
         self._alpha = alpha
         self._beta = beta
