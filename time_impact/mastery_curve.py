@@ -9,45 +9,14 @@ from scipy.stats import pearsonr
 from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import ItemAvgModel, Model
 from models.time_models import TimePriorCurrentModel
+from time_impact.time_utils import sigmoid, get_difficulties, rolling_success
 from utils import data as d
 from utils.data import LinearDrop, TimeLimitResponseModificator, \
     items_in_concept
 from utils.runner import Runner
 
 
-def sigmoid(x, c = 0):
-    return c + (1 - c) / (1 + np.exp(-x))
-
-
-def get_difficulties(data=None, model=None, force=False, name='difficulty'):
-    if data and model:
-        runner = Runner(data, model)
-        file_name = '../cache/difficulties_{}.pd'.format(runner._hash)
-    else:
-        data = d.Data("../data/matmat/2016-11-28/answers.pd")
-        model = EloPriorCurrentModel(KC=2, KI=0.5)
-        runner = Runner(data, model)
-        file_name = '../cache/difficulties_matmat.pd'
-    if os.path.exists(file_name) and not force:
-        difficulties = pd.read_pickle(file_name)
-    else:
-        items = answers['item'].unique()
-        runner.run(force=True)
-        difficulties =  pd.Series(data=model.get_difficulties(items), index=items, name=name)
-        difficulties.to_pickle(file_name)
-
-    return difficulties
-
-
 def master_curves(answers, metrics, min_answers=50, student_count=None, smooth=0):
-    def rolling_success(values, initial_value, exp=0.9):
-        current = initial_value
-        results = []
-        for value in values:
-            current = current * exp + (1 - exp) * value
-            results.append(current)
-        return results
-
     sessions = answers.groupby('session').apply(len)
     sessions = sessions[sessions >= min_answers]
     # sessions = sessions.sample(1)
@@ -72,8 +41,8 @@ def master_curves(answers, metrics, min_answers=50, student_count=None, smooth=0
 data = d.Data("../data/matmat/2016-11-28/answers.pd")
 data.trim_times()
 answers = data.get_dataframe_all()
-difficulties = get_difficulties()
-time_intensity = get_difficulties(
+difficulties = get_difficulties(answers)
+time_intensity = get_difficulties(answers,
     model=TimePriorCurrentModel(alpha=0.4, beta=0.04, KC=0.3, KI=0.3, first_level=False),
     data=data, name="time_intensity")
 
