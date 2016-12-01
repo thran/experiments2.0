@@ -10,7 +10,8 @@ from models.eloPriorCurrent import EloPriorCurrentModel
 from models.model import ItemAvgModel, Model
 from models.time_models import TimePriorCurrentModel
 from utils import data as d
-from utils.data import LinearDrop, TimeLimitResponseModificator
+from utils.data import LinearDrop, TimeLimitResponseModificator, \
+    items_in_concept
 from utils.runner import Runner
 
 
@@ -18,18 +19,12 @@ def sigmoid(x, c = 0):
     return c + (1 - c) / (1 + np.exp(-x))
 
 
-def items_in_concept(data, concept):
-    pk, level = data.get_skill_id(concept)
-    items = data.get_items_df()
-    return items[items["skill_lvl_" + str(level)] == pk].index
-
-
 def get_difficulties(data=None, model=None, force=False, name='difficulty'):
     if data and model:
         runner = Runner(data, model)
         file_name = '../cache/difficulties_{}.pd'.format(runner._hash)
     else:
-        data = d.Data("../data/matmat/2016-06-27/answers.pd")
+        data = d.Data("../data/matmat/2016-11-28/answers.pd")
         model = EloPriorCurrentModel(KC=2, KI=0.5)
         runner = Runner(data, model)
         file_name = '../cache/difficulties_matmat.pd'
@@ -44,7 +39,7 @@ def get_difficulties(data=None, model=None, force=False, name='difficulty'):
     return difficulties
 
 
-def master_curves(answers, metrics, min_answers=150, student_count=None, smooth=0):
+def master_curves(answers, metrics, min_answers=50, student_count=None, smooth=0):
     def rolling_success(values, initial_value, exp=0.9):
         current = initial_value
         results = []
@@ -53,28 +48,28 @@ def master_curves(answers, metrics, min_answers=150, student_count=None, smooth=
             results.append(current)
         return results
 
-    students = answers.groupby('student').apply(len)
-    students = students[students >= min_answers]
-    students = students.sample(1)
+    sessions = answers.groupby('session').apply(len)
+    sessions = sessions[sessions >= min_answers]
+    # sessions = sessions.sample(1)
 
     for i, mcs in enumerate(metrics):
         plt.subplot(len(metrics), 1, i + 1)
         for metric_name, metric in mcs.items():
             success_mean = metric.mean()
             s = np.zeros(min_answers)
-            for student in students.index[:student_count] if student_count else students.index:
+            for student in sessions.index[:student_count] if student_count else sessions.index:
                 current = success_mean
-                a = metric.loc[answers[answers['student'] == student].index]
+                a = metric.loc[answers[answers['session'] == student].index]
                 success = rolling_success(a, success_mean)
                 if smooth:
                     success = pd.rolling_mean(pd.Series(success), 20) # hack to make line more smooth
                 s += success[:min_answers]
-            plt.plot(range(len(s)), s / (student_count if student_count else len(students)), label=metric_name)
+            plt.plot(range(len(s)), s / (student_count if student_count else len(sessions)), label=metric_name)
         plt.legend()
 
 
 # data = d.Data("../data/matmat/2016-06-27/answers.pd", filter=(100, 100))
-data = d.Data("../data/matmat/2016-06-27/answers.pd")
+data = d.Data("../data/matmat/2016-11-28/answers.pd")
 data.trim_times()
 answers = data.get_dataframe_all()
 difficulties = get_difficulties()
@@ -91,26 +86,25 @@ metrics = [
         "difficulty": sigmoid(answers['difficulty'] - difficulties.mean()),
     }, {
         "time_intensity": answers['time_intensity'],
-        "response time": np.log(answers["response_time"])
+        "response time": np.log(answers["response_time"]),
+        "time_intensity - response time": answers['time_intensity'] - np.log(answers["response_time"]),
     }, {
-        "time_intensity - response time": answers['time_intensity'] - np.log(answers["response_time"])
-    }, {
-        "difficulty * correct": sigmoid(answers['difficulty'] - difficulties.mean()) * answers['correct'],
-        "correct - difficulty": answers['correct'] -sigmoid(answers['difficulty'] - difficulties.mean())
+        # "difficulty * correct": sigmoid(answers['difficulty'] - difficulties.mean()) * answers['correct'],
+        "correct - difficulty": answers['correct'] -sigmoid(answers['difficulty'] - difficulties.mean()),
     }
 
 ]
 
 answers_lin = LinearDrop(14).modify(answers.copy())
-metrics[3]["correct, Linear time drop"] = answers_lin['correct']
+metrics[-1]["correct, Linear time drop"] = answers_lin['correct']
 
-answers_bin = TimeLimitResponseModificator([(7, 0.5)]).modify(answers.copy())
-metrics[3]["correct, ternary time"] = answers_bin['correct']
+# answers_bin = TimeLimitResponseModificator([(7, 0.5)]).modify(answers.copy())
+# metrics[3]["correct, ternary time"] = answers_bin['correct']
 
 
 # concept = 'numbers'
-# concept = 'addition'
-concept = 'multiplication'
+concept = 'addition'
+# concept = 'multiplication'
 plt.title(concept)
 answers = answers[answers['item'].isin(items_in_concept(data, concept))]
 print(len(answers))

@@ -32,10 +32,10 @@ def convert_to_data_format(df):
     del df['created_UNIX']
     return df
 
-# items()
+print(items())
 
-convert_from_R('addition')
-print(convert_from_R('multiplication'))
-convert_from_R('subtraction')
+# convert_from_R('addition')
+# print(convert_from_R('multiplication'))
+# convert_from_R('subtraction')
 
 

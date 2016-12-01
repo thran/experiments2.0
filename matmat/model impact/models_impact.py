@@ -393,7 +393,7 @@ if False:
         plt.plot((0, 16), (i * 4, i * 4), color="white")
         plt.plot((i * 4, i * 4), (0, 16), color="white")
 
-if True:
+if False:
     df = pd.read_pickle("corr-all.pd")
     df = df.loc[l1, l1]
 
@@ -469,7 +469,7 @@ if False:
             # eval_data=data_test
     ).to_pickle("Diff_models.pd")
 
-if False:
+if True:
     # prediction_quality(
     difficulty_stability2(
         [

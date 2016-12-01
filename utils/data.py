@@ -30,7 +30,10 @@ class Data():
 
         if not os.path.exists(filename):
             if os.path.exists(filename[:-3] + ".csv"):
-                pd.read_csv(filename[:-3] + ".csv", engine="python").to_pickle(filename)
+                df = pd.read_csv(filename[:-3] + ".csv", engine="python")
+                if df["response_time"].mean() > 1000:
+                    df["response_time"] /= 1000
+                df.to_pickle(filename)
             else:
                 raise FileNotFoundError("Data file '{}' not found".format(filename))
 
@@ -193,7 +196,7 @@ class Data():
 
     def get_skill_id(self, skill):
         df = self.get_skills_df()
-        pk = df[df["name"] == skill].index[0]
+        pk = df[df["identifier"] == skill].index[0]
         level = 0
         current = pk
         while not np.isnan(df.loc[current]["parent"]):
@@ -384,3 +387,7 @@ def convert_prosoapp(filename):
     answers.to_pickle(filename.replace("csv", "pd"))
     return answers
 
+def items_in_concept(data, concept):
+    pk, level = data.get_skill_id(concept)
+    items = data.get_items_df()
+    return items[items["skill_lvl_" + str(level)] == pk].index
