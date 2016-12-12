@@ -13,7 +13,8 @@ csv.field_size_limit(sys.maxsize)
 
 
 class Data():
-    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False, only_first=False, filter=None, response_modification=None):
+    def __init__(self, filename, test_subset=False, train_size=None, train_seed=42, only_train=False,
+                 only_first=False, filter=None, response_modification=None, filter_items=None):
         self._filename = filename
         self._test_subset = test_subset
         self._data = None
@@ -24,6 +25,7 @@ class Data():
         self._only_first = only_first
         self._only_train = only_train
         self._filter = filter
+        self._filter_items = filter_items
         self._response_modification = response_modification
 
         self.VERSION = 1
@@ -69,6 +71,9 @@ class Data():
         for req in ["item", "student", "correct", "response_time"]:
             if req not in self._data.columns:
                 raise Exception("Column {} missing in {} dataframe".format(req, self._filename))
+
+        if self._filter_items:
+            self.filter_items(self._filter_items)
 
         if self._only_first:
             self._filter_only_first()
@@ -173,6 +178,12 @@ class Data():
         filtered.set_index("index", inplace=True)
         self._data = filtered
 
+    def filter_items(self, items_filter):
+        items = self.get_items_df()
+        for column, values in items_filter.items():
+            items = items[items[column].isin(values)]
+        self._data = self._data[self._data['item'].isin(items.index)]
+
     def trim_times(self, limit=60):
         self._load_file()
         self._data.loc[self._data["response_time"] < 0.5, "response_time"] = 0.5
@@ -208,6 +219,7 @@ class Data():
         items = self.get_items_df(filename)
         return dict(zip(items.index, items["skill"]))
 
+
     def get_items_df(self, filename="items.csv", with_skills=True):
         file = self._filename.split("/")
         file[-1] = filename
@@ -217,14 +229,13 @@ class Data():
         skills = self.get_skills_df()
         return items.join(skills, on="skill")
 
-
     def get_concepts(self, level=1):
         items = self.get_items_df()
         skills = self.get_skills_df()
 
         concepts = {}
         for concept in items["skill_lvl_" + str(level)].unique():
-            concepts[skills.loc[concept, "name"]] = list(items[items["skill_lvl_" + str(level)] == concept].index)
+            concepts[skills.loc[concept, "identifier"]] = list(items[items["skill_lvl_" + str(level)] == concept].index)
         return concepts
 
 

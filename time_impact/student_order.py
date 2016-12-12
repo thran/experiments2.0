@@ -12,7 +12,7 @@ from utils.data import LinearDrop, items_in_concept, \
     TimeLimitResponseModificator
 
 
-def get_order(answers, metrics, min_answers=20):
+def get_order(answers, metrics, min_answers=50):
     sessions = answers.groupby('session').apply(len)
     sessions = sessions[sessions >= min_answers]
 

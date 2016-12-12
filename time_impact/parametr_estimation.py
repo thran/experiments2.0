@@ -87,7 +87,7 @@ if 1:
     Runner(data2, model2).run(force=True, only_train=True)
 
     items_ids = data1.get_items()
-    items_ids = list(items_in_concept(data(None), 'multiplication_small'))
+    items_ids = list(items_in_concept(data(None), 'division'))
 
     v1 = model1.get_difficulties(items_ids)
     v2 = model2.get_difficulties(items_ids)
