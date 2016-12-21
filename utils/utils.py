@@ -1,3 +1,4 @@
+import json
 import os
 from itertools import product
 from functools import reduce, wraps
@@ -5,6 +6,7 @@ from utils import  evaluator
 import pandas as pd
 import seaborn as sns
 import matplotlib.pylab as plt
+from functools import partial
 
 def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=None, time=False):
     params = parameter_grid(parameters)
@@ -44,22 +46,39 @@ def enumerate_df(df, column_name='enum'):
     return df
 
 
-def cache_pandas(f, cache_name_var='cache', dir='cache'):
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        if cache_name_var not in kwargs:
-            return f(*args, **kwargs)
+class Cache:
+    def __init__(self, type='pandas', cache_name_var='cache', dir='cache'):
+        self.type = type
+        self.cache_name_var = cache_name_var
+        self.dir = dir
+    def __call__(self, f):
+        def wrapper(*args, **kwargs):
+            if self.cache_name_var not in kwargs:
+                return f(*args, **kwargs)
 
-        filename = os.path.join(dir, f.__name__ + '-' + kwargs[cache_name_var] + '.pd')
-        if not os.path.exists(dir):
-            os.makedirs(dir)
-        if os.path.exists(filename):
-            # print("read", filename)
-            return pd.read_pickle(filename)
+            extension = '?'
+            if self.type == 'pandas':
+                extension = 'pd'
+            if self.type == 'json':
+                extension = 'json'
 
-        value = f(*args, **kwargs)
-        value.to_pickle(filename)
-        # print("write", filename)
-        return value
+            filename = os.path.join(self.dir, f.__name__ + '-' + kwargs[self.cache_name_var] + '.' + extension)
+            if not os.path.exists(self.dir):
+                os.makedirs(self.dir)
+            if os.path.exists(filename):
+                # print("read", filename)
+                if self.type == 'pandas':
+                    return pd.read_pickle(filename)
+                if self.type == 'json':
+                    return json.load(open(filename))
+                return
 
-    return wrapper
+            value = f(*args, **kwargs)
+            if self.type == 'pandas':
+                value.to_pickle(filename)
+            if self.type == 'json':
+                json.dump(value, open(filename, 'w'))
+
+            # print("write", filename)
+            return value
+        return wrapper

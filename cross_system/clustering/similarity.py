@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.spatial.distance import cosine, euclidean
 from skll.metrics import kappa
 import seaborn as sns
-from utils.utils import cache_pandas
+from utils.utils import cache
 import matplotlib.pylab as plt
 
 
@@ -109,70 +109,70 @@ def pairwise_metric(df, metric, min_periods=1, prefect_fit=1.):
     return remove_nans(pd.DataFrame(met, index=df.columns, columns=df.columns))
 
 
-@cache_pandas
+@cache
 def similarity_pearson(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return remove_nans(data.corr())
 
 
-@cache_pandas
+@cache
 def similarity_kappa(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, kappa_own)
 
 
-@cache_pandas
+@cache
 def similarity_kappa2(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, kappa)
 
 
-@cache_pandas
+@cache
 def similarity_cosine(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, cosine)
 
 
-@cache_pandas
+@cache
 def similarity_euclidean(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, euclidean, prefect_fit=0.)
 
 
-@cache_pandas
+@cache
 def similarity_yulesQ(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, yulesQ)
 
 
-@cache_pandas
+@cache
 def similarity_ochiai(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, ochiai)
 
 
-@cache_pandas
+@cache
 def similarity_sokal(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, sokal)
 
 
-@cache_pandas
+@cache
 def similarity_accuracy(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, accuracy)
 
 
-@cache_pandas
+@cache
 def similarity_jaccard(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')

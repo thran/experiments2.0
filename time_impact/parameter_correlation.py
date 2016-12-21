@@ -1,18 +1,12 @@
 from collections import defaultdict
 
-import math
 import matplotlib.pylab as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 
 from models.eloConcepts import EloConcepts
-from models.eloPriorCurrent import EloPriorCurrentModel
-from models.time_models import TimePriorCurrentModel
-from time_impact.time_utils import get_difficulties, rolling_success
 from utils import data as d
-from utils.data import LinearDrop, items_in_concept, \
-    TimeLimitResponseModificator
+from utils.data import LinearDrop, items_in_concept
 from utils.runner import Runner
 
 basic_data = lambda response_modification: d.Data("../data/matmat/2016-12-11/answers.pd",
