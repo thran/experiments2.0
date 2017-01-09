@@ -73,8 +73,7 @@ class EloConcepts(Model):
     def get_difficulties(self, items):
         return [self.difficulty[i] for i in items]
 
-    def get_skills(self, students, concept=None):
+    def get_skill(self, student, concept=None):
         if concept is None:
-            return [self.global_skill[s] for s in students]
-
-        return [self.concept_skill[concept][s] for s in students]
+            return self.global_skill[student]
+        return self.concept_skill[concept][student]

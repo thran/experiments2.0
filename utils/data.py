@@ -117,7 +117,8 @@ class Data():
         self._data_test = self._data_test.join(pd.Series(predictions, name="prediction"), on="id")
         self._data_test = self._data_test.join(pd.Series(time_predictions, name="time_prediction"), on="id")
 
-        self._data_test['time_prediction_log'] = np.log(self._data_test['time_prediction'])
+        if sum(time_predictions.isnull()) == 0:
+            self._data_test['time_prediction_log'] = np.log(self._data_test['time_prediction'])
         self._data_test['response_time_log'] = np.log(self._data_test['response_time'])
 
     def get_items(self):

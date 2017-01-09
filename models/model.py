@@ -46,7 +46,7 @@ class Model:
             prediction, time_prediction = add_time_prediction_if_missing(self.predict(answer["student"], answer["item"], answer))
             self.update(answer["student"], answer["item"], prediction, time_prediction, answer["correct"], answer["response_time"], answer)
             if self.after_update_callback is not None:
-                self.after_update_callback(answer["student"], answer["item"])
+                self.after_update_callback(answer)
 
         if not only_train:
             print("  testing")
@@ -56,7 +56,7 @@ class Model:
                 if logger is not None:
                     logger(answer, prediction, time_prediction)
                 if self.after_update_callback is not None:
-                    self.after_update_callback(answer["student"], answer["item"])
+                    self.after_update_callback(answer)
 
         self.post_process_data(data)
 
@@ -66,13 +66,13 @@ class Model:
     def update(self, student, item, prediction, time_prediction, correct, response_time, extra):
         pass
 
-    def get_skills(self, students):
-        return [self.get_skill(s) for s in students]
+    def get_skills(self, students, **kwargs):
+        return [self.get_skill(s, **kwargs) for s in students]
 
     def get_difficulties(self, items):
         return [self.get_difficulty(i) for i in items]
 
-    def get_skill(self, student):
+    def get_skill(self, student, **kwargs):
         return None
 
     def get_difficulty(self, item):

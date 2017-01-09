@@ -1,12 +1,16 @@
 import json
 import os
 from itertools import product
-from functools import reduce, wraps
+from functools import reduce
+from hashlib import sha1
+
+import numpy as np
+
 from utils import  evaluator
 import pandas as pd
 import seaborn as sns
 import matplotlib.pylab as plt
-from functools import partial
+
 
 def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=None, time=False):
     params = parameter_grid(parameters)
@@ -46,11 +50,19 @@ def enumerate_df(df, column_name='enum'):
     return df
 
 
+def sigmoid(x, c = 0):
+    return c + (1 - c) / (1 + np.exp(-x))
+
+
+def make_hash(s, length=20):
+    return sha1(str(s).encode()).hexdigest()[:length]
+
 class Cache:
-    def __init__(self, type='pandas', cache_name_var='cache', dir='cache'):
+    def __init__(self, type='pandas', cache_name_var='cache', dir='cache', hash=False):
         self.type = type
         self.cache_name_var = cache_name_var
         self.dir = dir
+        self.hash = hash
     def __call__(self, f):
         def wrapper(*args, **kwargs):
             if self.cache_name_var not in kwargs:
@@ -62,7 +74,10 @@ class Cache:
             if self.type == 'json':
                 extension = 'json'
 
-            filename = os.path.join(self.dir, f.__name__ + '-' + kwargs[self.cache_name_var] + '.' + extension)
+            cache_name = kwargs[self.cache_name_var]
+            if self.hash:
+                cache_name = make_hash(cache_name)
+            filename = os.path.join(self.dir, f.__name__ + '-' + cache_name + '.' + extension)
             if not os.path.exists(self.dir):
                 os.makedirs(self.dir)
             if os.path.exists(filename):
