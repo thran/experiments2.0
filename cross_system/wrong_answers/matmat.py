@@ -8,7 +8,7 @@ import pandas as pd
 import matplotlib.pylab as plt
 import seaborn as sns
 
-data = Data("../../data/matmat/2016-01-04/answers.pd")
+data = Data("../../data/matmat/2017-03-29/answers.pd")
 # concepts = ["numbers <= 10", "numbers <= 20", "addition <= 10", "subtraction <= 10", "multiplication1"]
 concepts = ["numbers", "addition", "subtraction", "multiplication", "division"]
 
@@ -41,7 +41,7 @@ def type_of_mistakes(data):
         answers = answers.join(data.get_items_df()["question"], on="item")
         wrong = answers[(answers["correct"] != 1)]
         counts = defaultdict(lambda: 0)
-        for (question, answer), count in wrong.groupby(["question", "answer"])["id"].count().iteritems():
+        for (question, answer), count in wrong.groupby(["question", "answer"]).size().iteritems():
             g = re.match(r'(\d+)(.)(\d+)', question)
             if not g:
                 correct_answer = int(question)
@@ -82,8 +82,8 @@ def type_of_mistakes(data):
                 df.loc[len(df)] = concept, mistake_type, count / counts["all"]
 
     print(df)
-    sns.barplot(data=df, x="mistake_type", y="ratio", hue="concept")
-    # sns.barplot(data=df, x="concept", y="ratio", hue="mistake_type")
+    # sns.barplot(data=df, x="mistake_type", y="ratio", hue="concept")
+    sns.barplot(data=df, x="concept", y="ratio", hue="mistake_type")
 
 
 # repetition(data)

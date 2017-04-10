@@ -12,12 +12,12 @@ import matplotlib.lines as mlines
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse, \
     MathGardenResponseModificator
 
-data_set, n_clusters  = 'matmat-numbers', 3
+# data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-multiplication', 1
 # data_set, n_clusters  = 'matmat-addition', 1
 # data_set, n_clusters  = 'matmat-all', 4
 # data_set, n_clusters  = 'math_garden-multiplication', 1
-# data_set, n_clusters  = 'math_garden-addition', 1
+data_set, n_clusters  = 'math_garden-addition', 1
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-all2', 2
 answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
@@ -35,7 +35,7 @@ clustering = kmeans
 # answers = answers.loc[:67000, :]
 print(len(answers))
 
-if True:
+if False:
     plt.figure(figsize=(10, 5))
     # students = answers['student'].unique()
     # students = students[: len(students) // 2]
@@ -80,7 +80,7 @@ if False:
     g = sns.pairplot(data, diag_kind="kde")
     g.map_lower(sns.kdeplot, cmap="Blues_d")
 
-if False:
+if True:
     results = []
     truths = {}
     s = None

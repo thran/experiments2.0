@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.spatial.distance import cosine, euclidean
 from skll.metrics import kappa
 import seaborn as sns
-from utils.utils import cache
+from utils.utils import Cache
 import matplotlib.pylab as plt
 
 
@@ -28,10 +28,10 @@ def accuracy(x, y):
 
 
 def jaccard(x, y):
-    a = ((x==1) & (y==1)).sum()
+    d = ((x==1) & (y==1)).sum()
     b = ((x==1) & (y==0)).sum()
     c = ((x==0) & (y==1)).sum()
-    d = ((x==0) & (y==0)).sum()
+    a = ((x==0) & (y==0)).sum()
 
     return (a) / (a + b + c)
 
@@ -46,10 +46,10 @@ def sokal(x, y):
 
 
 def ochiai(x, y):
-    a = ((x==1) & (y==1)).sum()
+    d = ((x==1) & (y==1)).sum()
     b = ((x==1) & (y==0)).sum()
     c = ((x==0) & (y==1)).sum()
-    d = ((x==0) & (y==0)).sum()
+    a = ((x==0) & (y==0)).sum()
 
     return (a) / math.sqrt((a + b) * (a + c))
 
@@ -109,77 +109,76 @@ def pairwise_metric(df, metric, min_periods=1, prefect_fit=1.):
     return remove_nans(pd.DataFrame(met, index=df.columns, columns=df.columns))
 
 
-@cache
 def similarity_pearson(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return remove_nans(data.corr())
 
 
-@cache
+@Cache()
 def similarity_kappa(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, kappa_own)
 
 
-@cache
+@Cache()
 def similarity_kappa2(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, kappa)
 
 
-@cache
+@Cache()
 def similarity_cosine(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, cosine)
 
 
-@cache
+@Cache()
 def similarity_euclidean(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, euclidean, prefect_fit=0.)
 
 
-@cache
+@Cache()
 def similarity_yulesQ(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, yulesQ)
 
 
-@cache
+@Cache()
 def similarity_ochiai(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, ochiai)
 
 
-@cache
+@Cache()
 def similarity_sokal(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, sokal)
 
 
-@cache
+@Cache()
 def similarity_accuracy(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, accuracy)
 
 
-@cache
+@Cache()
 def similarity_jaccard(data, cache=None):
     if 'student' in data.columns:
         data = data.pivot('student', 'item', 'correct')
     return pairwise_metric(data, jaccard)
 
 
-def similarity_links(data, trash_hold=None):
+def wsimilarity_links(data, trash_hold=None):
     if trash_hold is None:
         trash_hold = data.median()
     return pairwise_metric(data > trash_hold, links)
@@ -188,10 +187,12 @@ def similarity_double_pearson(answers):
     return similarity_pearson(similarity_pearson(answers))
 
 def plot_similarity_hist(X, ground_truth, similarity_name):
+
     same, different = [], []
     for concept1 in set(ground_truth):
         for concept2 in set(ground_truth):
             values = list(X.loc[ground_truth == concept1, ground_truth == concept2].values.flatten())
+            values = [x for x in values if x != 1]
             if concept1 == concept2:
                 same += values
             elif concept1 > concept2:

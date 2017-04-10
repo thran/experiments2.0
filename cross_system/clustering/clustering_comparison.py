@@ -47,7 +47,7 @@ clusterings = [
     hierarchical
 ]
 
-runs = 30
+runs = 1
 results = []
 for run in range(runs):
     A = answers.sample(frac=0.5)

@@ -71,7 +71,7 @@ missing = 0.
 
 
 
-def students(runs=15):
+def students(runs=1):
     results = []
     for run in range(runs):
         # for n_students in range(100, 1001, 100):

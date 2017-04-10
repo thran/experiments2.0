@@ -62,7 +62,7 @@ def next_item(answers):
 def last_in_session(answers):
     if "last_in_session" in answers.columns:
         return
-    answers["timestamp"] = pd.to_datetime(answers["timestamp"])
+    answers["timestamp"] = pd.to_datetime(answers["time"])
     answers["next_timestamp"] = answers.groupby("student")["timestamp"].shift(-1)
     answers["last_in_session"] = answers["next_timestamp"].isnull() | (answers["next_timestamp"] - answers["timestamp"] > pd.Timedelta(Minute(30)))
     # print(answers.loc[:, ["student", "timestamp", "next_timestamp", "last_in_session"]])
@@ -166,7 +166,7 @@ if False:
 # radek_plot("results/{}.csv".format("anatom"))
 # radek_plot("results/{}.csv".format("slepemapy"))
 
-if False:
+if True:
     normalize = False
 
     matmat = pd.read_csv("results/{}.csv".format("matmat"), sep = ";")
@@ -200,11 +200,12 @@ if False:
 
     if True:
         plt.subplot(122)
-        results2 = results[results["system"] == "slepemapy"]
+        results2 = results[results["system"] == "matmat"]
         print(results["context"].unique())
+        print(results)
         sns.barplot(data=results2[results2["statistics"] == "wfreq"], x="classification", y="value", hue="context",
                     order=['topcwa', 'cwa', 'other', 'missing'],
-                    hue_order=['United States-state', 'Africa-state', 'World-state', 'Europe-state', 'Czech Rep.-river',]
+                    hue_order=["numbers", "addition", "subtraction", "multiplication", "division"]
                     )
 
     if False:
@@ -218,6 +219,6 @@ if False:
 
     plt.show()
 
-current_palette = sns.color_palette()
-sns.palplot(current_palette)
-print([[c * 255 for c in p] for p in current_palette])
+# current_palette = sns.color_palette()
+# sns.palplot(current_palette)
+# print([[c * 255 for c in p] for p in current_palette])

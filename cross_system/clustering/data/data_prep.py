@@ -3,6 +3,7 @@ import random
 
 import numpy as np
 import pandas as pd
+import os
 
 
 def matmat():
@@ -60,11 +61,15 @@ def math_garden(concept='subtraction'):
 def cestina(concept_id=1, concept_name='B'):
     answers = pd.read_csv('../../../data/umimecesky/2016-05-18/doplnovackaLog.csv', sep=';')
     questions = pd.read_csv('../../../data/umimecesky/2016-05-18/doplnovackaZadani.csv', sep=';', index_col='word')
+
     answers = answers.join(questions, on='word',rsuffix='_question')
-    concepts = pd.read_csv('../../../data/umimecesky/shluky-{}.csv'.format(concept_name.lower()))
-    concepts = pd.melt(concepts)
-    concepts = concepts.loc[concepts['value'] == concepts['value'] , :]
-    concepts = pd.Series(data=list(concepts['variable']), index=concepts['value'], name='manual_concept')
+    if os.path.exists('../../../data/umimecesky/shluky-{}.csv'.format(concept_name.lower())):
+        concepts = pd.read_csv('../../../data/umimecesky/shluky-{}.csv'.format(concept_name.lower()))
+        concepts = pd.melt(concepts)
+        concepts = concepts.loc[concepts['value'] == concepts['value'] , :]
+        concepts = pd.Series(data=list(concepts['variable']), index=concepts['value'], name='manual_concept')
+    else:
+        concepts = None
 
     question_solutions = {}
     for question in questions.itertuples():
@@ -73,10 +78,13 @@ def cestina(concept_id=1, concept_name='B'):
 
     questions.loc[questions['variant1'] == questions['correct'], 'correct_variant'] = 0
     questions.loc[questions['variant2'] == questions['correct'], 'correct_variant'] = 1
-    questions = questions.join(concepts)
+    if concepts:
+        questions = questions.join(concepts)
     questions = questions.set_index(questions['id'])
 
+
     questions = questions[questions['concept'] == concept_id]
+    print(questions)
 
     items = questions.loc[:, ['solved', 'manual_concept']].rename(columns={'solved': 'name', 'manual_concept': 'concept'})
     # items = questions.loc[:, ['solved', 'correct']].rename(columns={'solved': 'name', 'correct': 'concept'})
@@ -131,10 +139,12 @@ def simulated(n_students=100, n_concepts=5, n_items=20):
 # math_garden('subtraction')
 # matmat()
 # matmat_all()
-math_garden_all()
+# math_garden_all()
 # cestina(7, 'Z')
 # cestina(1, 'B')
 # cestina(2, 'L')
 # cestina(9, 'konc-prid')
+# cestina(8, 'zs')
+cestina(16, 'nn')
 
 # simulated(n_students=100, n_concepts=2, n_items=100)

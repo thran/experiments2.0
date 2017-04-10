@@ -81,6 +81,6 @@ def thresholds(curves, count=100, cache=None):
 
 
 def get_order(curves):
-    return np.argsort(np.argsort(curves))
-    # return np.argsort(np.argsort([c[::-1] for c in curves]))
+    # return np.argsort(np.argsort(curves))
+    return np.argsort(np.argsort([np.mean(c[-5:]) for c in curves]))
 

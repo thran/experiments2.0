@@ -13,11 +13,11 @@ from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
 # data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
-# data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+data_set, n_clusters  = 'simulated-s100-c5-i20', 5
 # data_set, n_clusters  = 'simulated-s50-c5-i100', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
-data_set, n_clusters  = 'math_garden-multiplication', 3
+# data_set, n_clusters  = 'math_garden-multiplication', 3
 # data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
@@ -50,7 +50,7 @@ for f in [similarity_pearson, similarity_yulesQ]:
             similarities.append(lambda x, f=f: f(x, cache=data_set + str(modificator)))
             similarities_names.append(f.__name__.replace('similarity_', ''))
 
-if True:
+if False:
     euclid = True
     clusters = []
     for i, similarity in enumerate(similarities):
@@ -91,7 +91,7 @@ if True:
     # sns.clustermap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
 
 
-if False:
+if True:
     for i, (similarity, similarities_name) in enumerate(zip(similarities, similarities_names)):
         print(similarities_name)
         X = similarity(answers)

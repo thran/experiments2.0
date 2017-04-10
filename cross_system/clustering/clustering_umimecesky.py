@@ -33,7 +33,7 @@ similarities = [
     (lambda x: similarity_pearson(similarity_pearson(x)), False, 'Pearson -> Pearson'),
     # (lambda x: similarity_pearson(similarity_yulesQ(x)), False, 'Yule -> Pearson'),
     # (lambda x: similarity_links(similarity_yulesQ(x)), False, 'Yule -> Links'),
-    (lambda x: similarity_links(similarity_pearson(x)), False, 'Pearson -> Links'),
+    # (lambda x: similarity_links(similarity_pearson(x)), False, 'Pearson -> Links'),
     (lambda x: similarity_pearson(similarity_pearson(x)), True, 'Pearson -> Pearson -> Euclid'),
     # (lambda x: similarity_pearson(similarity_yulesQ(x)), True, 'Yule -> Pearson -> Euclid'),
     # (lambda x: similarity_euclidean(similarity_pearson(x)), True, 'pearson -> euclid -> euclid'),
@@ -50,7 +50,7 @@ students = pd.Series(answers['student'].unique())
 print(len(students))
 results = []
 for run in range(50):
-    for student_count in range(100, 1101, 100):
+    for student_count in list(range(100, 1101, 100)) + [len(students)]:
     # for student_count in range(10000, 60001, 10000):
         A = answers[answers['student'].isin(students.sample(n=student_count))]
         # A = answers.sample(n=student_count)
@@ -65,10 +65,11 @@ for run in range(50):
             results.append([student_count, clustering.__name__, rand, similarity_name])
 
 results = pd.DataFrame(results, columns=['students', 'clustering', 'rand_index', 'similarity'])
-print(results)
+
 
 plt.figure(figsize=(16, 24))
 sns.pointplot(data=results, x='students', y='rand_index', hue='similarity')
+# sns.violinplot(data=results, x='students', y='rand_index', hue='similarity')
 
 
 plt.show()

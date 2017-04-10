@@ -16,11 +16,15 @@ def success_rate(answers):
 def exponential_average(answers, initial_value=0, exp=0.9, column='correct'):
     current = initial_value
     results = []
+    i = 0
     for value in answers[column]:
         current = current * exp + (1 - exp) * value
+        i += 1
         results.append(current)
     return results
 
+
+exponential_average({'correct': [1] * 100})
 
 def exponential_average_time(answers, **kwargs):
     return exponential_average(answers, column='correct_time', **kwargs)
@@ -43,9 +47,9 @@ def model_prediction(answers, column='prediction'):
     return list(answers[column])[1:]
 
 
-def model_skills(answers, avg_difficulty=0):
+def model_skills(answers, avg_difficulty=0, **kwargs):
     return list(sigmoid(answers['skill'] - avg_difficulty))
 
 
-def model_skills_time(answers, avg_difficulty=0):
+def model_skills_time(answers, avg_difficulty=0, **kwargs):
     return list(sigmoid(answers['skill_time'] - avg_difficulty))

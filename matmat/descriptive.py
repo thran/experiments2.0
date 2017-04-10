@@ -30,8 +30,8 @@ def response_times(data, time_dist=True, mean_times_dist=True):
         plt.figure()
         sns.distplot(np.exp(df.groupby("item")["log_response_time"].mean()), hist=False, label="items ({})".format(len(data.get_items())))
         sns.distplot(np.exp(df.groupby("student")["log_response_time"].mean()), hist=False, label="students ({})".format(len(data.get_students())))
-        sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("item")["log_response_time"].mean()), hist=False, label="items - with answer({})".format(len(data.get_items())))
-        sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("student")["log_response_time"].mean()), hist=False, label="students - with answer ({})".format(len(data.get_students())))
+        # sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("item")["log_response_time"].mean()), hist=False, label="items - with answer({})".format(len(data.get_items())))
+        # sns.distplot(np.exp(df[~df["answer"].isnull()].groupby("student")["log_response_time"].mean()), hist=False, label="students - with answer ({})".format(len(data.get_students())))
 
 
         plt.title("Distribution of median time (exp of median of log times)")
@@ -116,17 +116,27 @@ def pair_grid(data):
         g = g.map_lower(sns.kdeplot, shade=False)
 
 
-data = Data("../data/matmat/2016-06-27/answers.pd")
+data = Data("../data/matmat/2017-03-29/answers.pd")
 # data = Data("../data/slepemapy/2016-ab-target-difficulty/answers.pd")
-data.filter_data(10, 10)
+# data.filter_data(10, 10)
+items = data.get_items_df()
+answers = data.get_dataframe_all()
+skills = data.get_skills_df()
 
-# response_times(data, time_dist=True, mean_times_dist=False)
-# answer_count(data, per_student=False, per_item=True, student_drop_off=False)
-# success_rate(data, per_student=False)
+response_times(data, time_dist=True, mean_times_dist=True)
+# answer_count(data, per_student=True, per_item=True, student_drop_off=True)
+# success_rate(data, per_student=True)
 # print(data.get_items_df().count())
 
-pair_grid(data)
+# pair_grid(data)
 plt.show()
+
+if False:
+    print('item count', len(items))
+    print('answer count', len(answers))
+    df = answers.merge(items, left_on='item', right_index=True)
+    df = df.merge(skills, left_on='skill_lvl_1', right_index=True)
+    print(df.groupby('name_y').size())
 
 
 if False:

@@ -14,11 +14,12 @@ import matplotlib.lines as mlines
 import matplotlib.pylab as plt
 from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
-# similarity_setting = lambda x: similarity_pearson(x), False, 'pearson'
-similarity_setting = similarity_yulesQ, True, 'yuleQ'
-# similarity_setting = similarity_pearson, True, 'pearson -> euclid'
-# similarity_setting = lambda x: similarity_yulesQ(x), True, 'yuleQ -> euclid'
-# similarity_setting = lambda x: similarity_pearson(similarity_pearson(x)), True, 'pearson -> pearson -> euclid'
+# similarity_setting = lambda x: similarity_pearson(x), 'pearson'
+# similarity_setting = similarity_yulesQ, 'yuleQ'
+# similarity_setting = similarity_pearson, 'pearson'
+# similarity_setting = lambda x: similarity_yulesQ(x), 'yuleQ'
+# similarity_setting = lambda x: similarity_pearson(similarity_pearson(x)), 'pearson -> pearson'
+similarity_setting = similarity_jaccard, 'Jaccard'
 runs = 10
 results = []
 
@@ -48,7 +49,7 @@ for data_set in [
             A1 = answers[answers['student'].isin(S1)]
             A2 = answers[answers['student'].isin(S2)]
             print(data_set, frac, len(A1), len(A2))
-            similarity, euclid, similarity_name = similarity_setting
+            similarity, similarity_name = similarity_setting
             X1 = similarity(A1)
             X2 = similarity(A2)
             if len(X1.index) != len(X2.index):
@@ -62,6 +63,7 @@ results = pd.DataFrame(results, columns=['frac', 'correlation', 'run', 'data_set
 print(results)
 
 plt.figure(figsize=(16, 24))
+plt.title(similarity_name)
 # sns.pointplot(data=results, x='frac', y='rand_index', hue='clustering')
 sns.tsplot(data=results, time='frac', value='correlation', unit='run', condition='data_set')
 
