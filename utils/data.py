@@ -375,17 +375,18 @@ def compute_corr(data, min_periods=1, method="pearson", merge_skills=False):
 
 
 def convert_slepemapy(filename):
-    answers = pd.read_csv(filename)
-    answers["correct"] = answers["item_asked_id"] == answers["item_answered_id"]
+    answers = pd.read_csv(filename, sep=';')
+    answers["correct"] = answers["place_asked"] == answers["place_answered"]
     answers.rename(columns={
-        "time": "timestamp",
-        "item_asked_id": "item",
-        "user_id": "student",
-        "item_answered_id": "answer",
+        "inserted": "timestamp",
+        "place_asked": "item",
+        "user": "student",
+        "place_answered": "answer",
     }, inplace=True)
     answers["response_time"] /= 1000
     answers.to_pickle(filename.replace("csv", "pd"))
     return answers
+
 
 def convert_prosoapp(filename):
     answers = pd.read_csv(filename)
@@ -393,11 +394,13 @@ def convert_prosoapp(filename):
     answers.rename(columns={
         "time": "timestamp",
         "user": "student",
+        "item_asked": "item",
         "item_answered": "answer",
     }, inplace=True)
     answers["response_time"] /= 1000
     answers.to_pickle(filename.replace("csv", "pd"))
     return answers
+
 
 def items_in_concept(data, concept):
     pk, level = data.get_skill_id(concept)

@@ -9,12 +9,14 @@ def convert_from_R(name):
     df.to_pickle('{}.pd'.format(name))
     return df
 
+
 def items():
     r.load('{}.rdata'.format('items123'))
     d = pandas2ri.ri2py(r['items123'])
     s = pd.Series(index=map(int, d[:len(d) // 2]), data=d[len(d) // 2:])
     s.to_pickle('items.pd')
     return s
+
 
 def convert_to_data_format(df):
     df = df.rename(columns={
