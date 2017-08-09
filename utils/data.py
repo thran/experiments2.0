@@ -180,7 +180,8 @@ class Data():
         self._data = filtered
 
     def filter_items(self, items_filter):
-        items = self.get_items_df()
+        items = self.get_items_df(with_skills=False)
+        items['id'] = items.index
         for column, values in items_filter.items():
             items = items[items[column].isin(values)]
         self._data = self._data[self._data['item'].isin(items.index)]
@@ -224,7 +225,7 @@ class Data():
     def get_items_df(self, filename="items.csv", with_skills=True):
         file = self._filename.split("/")
         file[-1] = filename
-        items = pd.read_csv(os.path.join(*file), index_col=0)
+        items = pd.read_csv(os.path.join(*file), index_col=0, sep=',')
         if not with_skills:
             return items
         skills = self.get_skills_df()

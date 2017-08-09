@@ -23,12 +23,15 @@ def answers():
         "responseTime": "response_time",
     }, inplace=True)
 
+    df['response_time'] = df['response_time'] / 1000
+    df['response_time'][df['response_time'] == 0] = None
+
     del df['index']
 
     print(df)
     df.to_pickle('answers.pd')
 
-# answers()
+answers()
 
 
 def items():
@@ -45,4 +48,4 @@ def items():
 
     print(items)
 
-items()
+# items()

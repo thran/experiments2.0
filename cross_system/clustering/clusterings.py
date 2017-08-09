@@ -21,7 +21,7 @@ def spectral_clustering(similarity, concepts=2, euclid=False):
     return sc.run(cluster_number=concepts, KMiter=50, sc_type=2)
 
 
-def spectral_clustering2(similarity, concepts=2, euclid=False):
+def spectral_clustering2(similarity, concepts=2, euclid=True):
     if euclid:
         model = SpectralClustering(n_clusters=concepts, affinity='nearest_neighbors')
         return model.fit_predict(similarity)
@@ -40,7 +40,7 @@ def hierarchical(similarity, concepts=2, euclid=False):
         return model.fit_predict(1 - similarity)
 
 
-def kmeans(similarity, concepts=2, euclid=False):
+def kmeans(similarity, concepts=2, euclid=True):
     if euclid:
         kmeans = KMeans(n_clusters=concepts, n_init=100, max_iter=1000)
         return kmeans.fit_predict(similarity)
@@ -72,11 +72,11 @@ def dbscan(similarity, concepts=2, euclid=False):
 
 
 def plot_clustering(items, xs, ys, labels=None, texts=None, shapes=None):
-    labels = [0] * len(xs) if labels is None else labels
+    labels = [None] * len(xs) if labels is None else labels
     texts = [''] * len(xs) if texts is None else texts
     shapes = [0] * len(xs) if shapes is None else shapes
     for item, x, y, label, text, shape in zip(items, xs, ys, labels, texts, shapes):
-        plt.plot(x, y, markers[shape], color=colors[label])
+        plt.plot(x, y, markers[shape], color=colors[label] if label is not None else 'k')
         plt.text(x, y, text)
 
 

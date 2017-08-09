@@ -36,7 +36,8 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                     r = report[filter_name]
                 print(model, filter_name)
                 print("RMSE: {:.5}".format(r["rmse"]))
-                print("RMSE-time: {:.5}".format(r['time']["rmse"]))
+                if 'time' in r:
+                    print("RMSE-time: {:.5}".format(r['time']["rmse"]))
                 if diff_to is not None:
                     print("RMSE diff: {:.5f}".format(diff_to - r["rmse"]))
                 print("LL: {:.6}".format(r["log-likely-hood"]))
@@ -50,11 +51,14 @@ def compare_models(data, models, names=None, dont=False, answer_filters=None, me
                 model_name = (str(model) if type(data) is not list else str(model) + str(d))[:150]
                 if names is not None:
                     model_name = names[i]
-                df.loc[len(df)] = (model_name, filter_name, r[metric], r['time'][metric])
+                if 'time' in r:
+                    df.loc[len(df)] = (model_name, filter_name, r[metric], r['time'][metric])
+                else:
+                    df.loc[len(df)] = (model_name, filter_name, r[metric], None)
 
     print(df)
 
-    for m in [metric, 'time-'+metric]:
+    for m in [metric, 'time-'+metric] if 'time' in r else [metric]:
         plt.figure()
         if type(data) is not list:
             plt.title(data)

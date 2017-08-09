@@ -3,7 +3,6 @@ from utils import data
 # data.convert_slepemapy('slepemapy/answers.csv')
 # data.convert_prosoapp('anatom/answers.csv')
 
-
 matmat = data.Data('matmat/answers.pd', filter=(100, 10))
 slepemapy = data.Data('slepemapy/answers.pd', filter=(100, 10))
 anatom = data.Data('anatom/answers.pd', filter=(100, 10))
@@ -25,6 +24,9 @@ def basic_stats(dataset):
     print('learners:', len(df['student'].unique()))
     print('items:', len(df['item'].unique()))
     print('answers:', len(df))
+    print('SR:', df['correct'].mean())
+    print('')
+    print('')
 
     # print('\\numprint{{{}}} &  \\numprint{{{}}} & \\numprint{{{}}} \\\\'.format(len(df['student'].unique()), len(df['item'].unique()), len(df)))
 

@@ -109,10 +109,11 @@ def pairwise_metric(df, metric, min_periods=1, prefect_fit=1.):
     return remove_nans(pd.DataFrame(met, index=df.columns, columns=df.columns))
 
 
-def similarity_pearson(data, cache=None):
+def similarity_pearson(data, cache=None, min_periods=1):
     if 'student' in data.columns:
+        data['correct'] = data['correct'].astype(float)
         data = data.pivot('student', 'item', 'correct')
-    return remove_nans(data.corr())
+    return remove_nans(data.corr(min_periods=min_periods))
 
 
 @Cache()
@@ -186,7 +187,7 @@ def wsimilarity_links(data, trash_hold=None):
 def similarity_double_pearson(answers):
     return similarity_pearson(similarity_pearson(answers))
 
-def plot_similarity_hist(X, ground_truth, similarity_name):
+def plot_similarity_hist(X, ground_truth, similarity_name, lim=True):
 
     same, different = [], []
     for concept1 in set(ground_truth):
@@ -203,12 +204,14 @@ def plot_similarity_hist(X, ground_truth, similarity_name):
         if len(different):
             sns.distplot(different)
     elif not similarity_name.endswith('euclid'):
-        plt.xlim([-1,1])
+        if lim:
+            plt.xlim([-1,1])
         sns.distplot(same)
         if len(different):
             sns.distplot(different)
     else:
         if len(different):
-            plt.xlim([-max(different), 0])
+            if lim:
+                plt.xlim([-max(different), 0])
             sns.distplot(-np.array(different))
         sns.distplot(-np.array(same))

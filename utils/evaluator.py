@@ -21,26 +21,27 @@ class Evaluator:
     def evaluate(self, force_evaluate=False, answer_filters=None, **kwargs):
         answer_filters = answer_filters if answer_filters is not None else {}
         report = self._load_report()
-        self._data.join_predictions(pd.read_pickle(self._runner.get_log_filename()))
         if force_evaluate or "evaluated" not in report:
+            self._data.join_predictions(pd.read_pickle(self._runner.get_log_filename()))
             print("Evaluating", self._hash, self._data, self._model)
             report.update(self._basic_metrics(self._data.iter_test(), **kwargs))
 
-            report['time'] = self._basic_metrics(
-                self._data.iter_test(),
-                prediction_column="time_prediction_log",
-                observation_column="response_time_log",
-                brier_min=self._data.get_dataframe_test()['time_prediction_log'].min(),
-                brier_max=self._data.get_dataframe_test()['time_prediction_log'].max(),
-                **kwargs)
+            if 'time_prediction_log' in self._data.get_dataframe_test():
+                report['time'] = self._basic_metrics(
+                    self._data.iter_test(),
+                    prediction_column="time_prediction_log",
+                    observation_column="response_time_log",
+                    brier_min=self._data.get_dataframe_test()['time_prediction_log'].min(),
+                    brier_max=self._data.get_dataframe_test()['time_prediction_log'].max(),
+                    **kwargs)
 
-            report['time-raw'] = self._basic_metrics(
-                self._data.iter_test(),
-                prediction_column="time_prediction",
-                observation_column="response_time",
-                brier_min=self._data.get_dataframe_test()['time_prediction'].min(),
-                brier_max=self._data.get_dataframe_test()['time_prediction'].max(),
-                **kwargs)
+                report['time-raw'] = self._basic_metrics(
+                    self._data.iter_test(),
+                    prediction_column="time_prediction",
+                    observation_column="response_time",
+                    brier_min=self._data.get_dataframe_test()['time_prediction'].min(),
+                    brier_max=self._data.get_dataframe_test()['time_prediction'].max(),
+                    **kwargs)
 
         if answer_filters is not None:
             for filter_name, filter_function in answer_filters.items():
@@ -129,9 +130,10 @@ class Evaluator:
 
         return report
 
-    def get_report(self, force_evaluate=False, force_run=False, **kwargs):
-        self._hash = self._runner.run(force=force_run)
-        return self.evaluate(force_evaluate=force_evaluate or force_run, **kwargs)
+    def get_report(self, force_evaluate=False, force_run=False, only_train=False, **kwargs):
+        self._hash = self._runner.run(force=force_run, only_train=only_train)
+        report = self.evaluate(force_evaluate=force_evaluate or force_run, **kwargs)
+        return report
 
     def roc_curve(self):
         self.get_report()

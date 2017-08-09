@@ -10,6 +10,7 @@ from utils import  evaluator
 import pandas as pd
 import seaborn as sns
 import matplotlib.pylab as plt
+import matplotlib.cm as cm
 
 
 def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=None, time=False):
@@ -19,9 +20,9 @@ def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=
     for p in params:
         model_params.update(p)
         if not time:
-            df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report()[metric]]
+            df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report(only_train=False)[metric]]
         else:
-            df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report()['time'][metric]]
+            df.loc[len(df)] = list(p.values()) + [evaluator.Evaluator(data, model(**model_params)).get_report(only_train=False)['time'][metric]]
 
     if plot_axes:
         if type(plot_axes) is not list:
@@ -30,7 +31,7 @@ def grid_search(data, model, model_params, parameters, metric="rmse", plot_axes=
         else:
             results = df.pivot(*plot_axes)[metric]
             results.sort_index(ascending=False, inplace=True)
-            sns.heatmap(results)
+            sns.heatmap(results, cmap=cm.get_cmap('viridis'))
 
 
 def parameter_grid(p):
@@ -66,6 +67,7 @@ class Cache:
     def __call__(self, f):
         def wrapper(*args, **kwargs):
             if self.cache_name_var not in kwargs:
+                print('skip',kwargs)
                 return f(*args, **kwargs)
 
             extension = '?'

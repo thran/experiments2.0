@@ -2,6 +2,7 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 
 from cross_system.clustering.clusterings import *
+from cross_system.clustering.similarity import *
 import pandas as pd
 import os
 import matplotlib.lines as mlines
@@ -25,11 +26,11 @@ kmeans = KMeans(n_clusters=n_clusters)
 
 # modificator = BinaryResponse()
 # modificator = TimeLimitResponseModificator([(5, 0.5)])
-modificator = LinearDrop(14)
+modificator =  LinearDrop(14)
 answers = modificator.modify(answers)
 
-X = similarity_double_pearson(answers)
-clusters = kmeans.fit_predict(X)
+X = similarity_pearson(similarity_pearson(answers))
+# clusters = kmeans.fit_predict(X)
 
 
 plt.figure(figsize=(15, 15))

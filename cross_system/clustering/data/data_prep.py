@@ -58,12 +58,12 @@ def math_garden(concept='subtraction'):
     items.to_pickle('math_garden-{}-items.pd'.format(concept))
 
 
-def cestina(concept_id=1, concept_name='B'):
+def cestina(concept_id=1, concept_name='B', shluky=False):
     answers = pd.read_csv('../../../data/umimecesky/2016-05-18/doplnovackaLog.csv', sep=';')
     questions = pd.read_csv('../../../data/umimecesky/2016-05-18/doplnovackaZadani.csv', sep=';', index_col='word')
 
     answers = answers.join(questions, on='word',rsuffix='_question')
-    if os.path.exists('../../../data/umimecesky/shluky-{}.csv'.format(concept_name.lower())):
+    if os.path.exists('../../../data/umimecesky/shluky-{}.csv'.format(concept_name.lower())) and shluky:
         concepts = pd.read_csv('../../../data/umimecesky/shluky-{}.csv'.format(concept_name.lower()))
         concepts = pd.melt(concepts)
         concepts = concepts.loc[concepts['value'] == concepts['value'] , :]
@@ -80,6 +80,8 @@ def cestina(concept_id=1, concept_name='B'):
     questions.loc[questions['variant2'] == questions['correct'], 'correct_variant'] = 1
     if concepts:
         questions = questions.join(concepts)
+    else:
+        questions['manual_concept'] = questions['correct_variant']
     questions = questions.set_index(questions['id'])
 
 
@@ -90,6 +92,8 @@ def cestina(concept_id=1, concept_name='B'):
     # items = questions.loc[:, ['solved', 'correct']].rename(columns={'solved': 'name', 'correct': 'concept'})
     # for f, t in (('í', 'i'), ('ý', 'y')):
     #     items.loc[items['concept'] == f, 'concept'] = t
+
+    items['concept'] = items['concept'].astype(int)
 
     answers = answers.rename(columns={'id': 'item', 'user': 'student'})
     answers = answers[answers['item'].isin(items.index)]
@@ -145,6 +149,6 @@ def simulated(n_students=100, n_concepts=5, n_items=20):
 # cestina(2, 'L')
 # cestina(9, 'konc-prid')
 # cestina(8, 'zs')
-cestina(16, 'nn')
+# cestina(16, 'nn')
 
-# simulated(n_students=100, n_concepts=2, n_items=100)
+# simulated(n_students=100, n_concepts=5, n_items=100)

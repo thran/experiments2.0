@@ -1,4 +1,5 @@
 import inspect
+import json
 
 import math
 from collections import defaultdict
@@ -77,6 +78,15 @@ class Model:
 
     def get_difficulty(self, item):
         return None
+
+    def get_random_factor(self, extra):
+        random_factor = 0
+        if 'options' in extra:
+            options = len(json.loads(extra['options'])) if type(extra['options']) == str else extra['options']
+            if options > 0:
+                random_factor = 1. /options
+
+        return random_factor
 
 
 class AvgModel(Model):

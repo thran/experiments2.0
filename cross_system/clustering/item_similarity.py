@@ -13,12 +13,13 @@ from utils.data import TimeLimitResponseModificator, LinearDrop, BinaryResponse
 
 # data_set, n_clusters  = 'matmat-numbers', 3
 # data_set, n_clusters  = 'matmat-all', 4
-data_set, n_clusters  = 'simulated-s100-c5-i20', 5
+# data_set, n_clusters  = 'simulated-s100-c5-i20', 2
+# data_set, n_clusters  = 'simulated-s100-c5-i200', 5
 # data_set, n_clusters  = 'simulated-s50-c5-i100', 5
 # data_set, n_clusters  = 'simulated-s250-c2-i20', 2
 # data_set, n_clusters  = 'math_garden-all', 3
 # data_set, n_clusters  = 'math_garden-multiplication', 3
-# data_set, n_clusters = 'cestina-B', 2
+data_set, n_clusters = 'cestina-B', 2
 # data_set, n_clusters = 'cestina-L', 2
 # data_set, n_clusters = 'cestina-Z', 2
 # data_set, n_clusters = 'cestina-konc-prid', 7
@@ -26,12 +27,15 @@ answers = pd.read_pickle('data/{}-answers.pd'.format(data_set))
 items = pd.read_pickle('data/{}-items.pd'.format(data_set))
 true_cluster_names = list(items['concept'].unique())
 
+print(data_set, len(answers), len(items))
+
 modificator = BinaryResponse()
 # modificator = TimeLimitResponseModificator([(5, 0.5)])
 # modificator = LinearDrop(14)
 answers = modificator.modify(answers)
 
 projection = tsne
+
 
 
 plt.figure(figsize=(15, 10))
@@ -91,7 +95,7 @@ if False:
     # sns.clustermap(rands, xticklabels=['truth'] + similarities_names, yticklabels=['truth'] + similarities_names, annot=True)
 
 
-if True:
+if False:
     for i, (similarity, similarities_name) in enumerate(zip(similarities, similarities_names)):
         print(similarities_name)
         X = similarity(answers)
@@ -127,7 +131,7 @@ if True:
             plot_clustering(
                 X.index, xs, ys,
                 # labels=predict,
-                # texts=[items.get_value(item, 'name') for item in X.index],
+                # texts=[items.get_vais lue(item, 'name') for item in X.index],
                 texts=None,
                 shapes=ground_truth,
             )
@@ -144,9 +148,9 @@ if True:
 if False:
     similarity, euclid = similarity_pearson, True
 
-    embeddings = [pca, mds, tsne]
+    embeddings = [pca, mds, tsne, spectral]
     for i, embedding in enumerate(embeddings):
-        X = similarity(answers)
+
         ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
         xs, ys = embedding(X, euclid=euclid)
         plt.subplot(1, len(embeddings), i + 1)
@@ -154,7 +158,7 @@ if False:
         plot_clustering(
             X.index, xs, ys,
             labels=ground_truth,
-            # texts=[items.get_value(item, 'name') for item in X.index],
+            texts=[items.get_value(item, 'name') for item in X.index],
             shapes=None,
         )
 
@@ -166,6 +170,19 @@ if False:
     plt.show()
 
 
+if True:
+    X = similarity_pearson(similarity_pearson(answers))
+    xs, ys = tsne(X, euclid=False)
+    ground_truth =np.array([true_cluster_names.index(items.get_value(item, 'concept')) for item in X.index])
+    for clustering in [kmeans, hierarchical, spectral_clustering]:
+        print(rand_index(ground_truth, clustering(X)))
+
+    plot_clustering(
+        X.index, xs, ys,
+        labels=ground_truth,
+        # texts=[items.get_value(item, 'name') for item in X.index],
+        shapes=None,
+    )
 
 # plt.savefig('results/tmp/matmat-{}-x.png'.format(modificator))
 plt.show()

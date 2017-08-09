@@ -6,7 +6,7 @@ from cross_system.clustering.similarity import similarity_euclidean
 
 
 def spectral(similarity, euclid=False):
-    if euclid:
+    if euclid and False:
         similarity = similarity_euclidean(similarity)
     else:
         similarity[similarity < 0] = 0
@@ -30,7 +30,7 @@ def tsne(similarity, euclid=False, perplexity=30):
         model = TSNE(learning_rate=100, perplexity=perplexity, n_iter=200000)
         result = model.fit_transform(similarity)
     else:
-        model = TSNE(learning_rate=100, n_iter=100000, init='random', metric='precomputed')
+        model = TSNE(learning_rate=100, perplexity=perplexity, n_iter=100000, init='random', metric='precomputed')
         result = model.fit_transform(1 - similarity)
 
     return result.T
